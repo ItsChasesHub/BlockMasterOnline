@@ -18,7 +18,7 @@ Do not access or attempt to access other users’ data (e.g., leaderboard scores
 Avoid causing harm to the application or its users (e.g., do not attempt a DoS attack).
 
 # What to Expect After Reporting:
-I am are committed to working with security researchers to address vulnerabilities promptly and responsibly. Here’s what you can expect after submitting a report:
+I am committed to working with security researchers to address vulnerabilities promptly and responsibly. Here’s what you can expect below after submitting a report.
 
 # Acknowledgment:
 I will acknowledge receipt of your report within 48 hours via Discord (@itsexlipsez).
