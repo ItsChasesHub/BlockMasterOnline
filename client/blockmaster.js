@@ -1,7 +1,16 @@
 class GemGame {
     constructor() {
+        console.log("Starting GemGame constructor...");
         this.canvas = document.getElementById("gameCanvas");
+        if (!this.canvas) {
+            console.error("Canvas element not found! Check your HTML for id='gameCanvas'.");
+            return;
+        }
         this.ctx = this.canvas.getContext("2d");
+        if (!this.ctx) {
+            console.error("Failed to get 2D context from canvas!");
+            return;
+        }
 
         this.gridSize = 8;
         this.tileSize = this.canvas.width / this.gridSize;
@@ -29,30 +38,50 @@ class GemGame {
         this.selectedGem = null;
         this.isAnimating = false;
 
-        document
-            .getElementById("newGameBtn")
-            .addEventListener("click", () => this.startNewGame());
-        document
-            .getElementById("simpleBtn")
-            .addEventListener("click", () => {
+        // Add event listeners with error handling
+        const newGameBtn = document.getElementById("newGameBtn");
+        if (newGameBtn) {
+            newGameBtn.addEventListener("click", () => this.startNewGame());
+        } else {
+            console.error("newGameBtn not found!");
+        }
+
+        const simpleBtn = document.getElementById("simpleBtn");
+        if (simpleBtn) {
+            simpleBtn.addEventListener("click", () => {
                 this.setMode("SIMPLE");
                 this.highlightButton("simpleBtn");
             });
-        document
-            .getElementById("timedBtn")
-            .addEventListener("click", () => {
+        } else {
+            console.error("simpleBtn not found!");
+        }
+
+        const timedBtn = document.getElementById("timedBtn");
+        if (timedBtn) {
+            timedBtn.addEventListener("click", () => {
                 this.setMode("TIMED");
                 this.highlightButton("timedBtn");
             });
-        document
-            .getElementById("explosionsBtn")
-            .addEventListener("click", () => {
+        } else {
+            console.error("timedBtn not found!");
+        }
+
+        const explosionsBtn = document.getElementById("explosionsBtn");
+        if (explosionsBtn) {
+            explosionsBtn.addEventListener("click", () => {
                 this.setMode("EXPLOSIONS");
                 this.highlightButton("explosionsBtn");
             });
-        document
-            .getElementById("endGameBtn")
-            .addEventListener("click", () => this.endGameWithName());
+        } else {
+            console.error("explosionsBtn not found!");
+        }
+
+        const endGameBtn = document.getElementById("endGameBtn");
+        if (endGameBtn) {
+            endGameBtn.addEventListener("click", () => this.endGameWithName());
+        } else {
+            console.error("endGameBtn not found!");
+        }
 
         this.canvas.addEventListener("click", this.handleClick.bind(this));
         this.updateScoreDisplay();
@@ -63,14 +92,22 @@ class GemGame {
         this.highlightButton("simpleBtn");
         
         this.animate();
+        console.log("GemGame constructor completed.");
     }
 
     highlightButton(buttonId) {
+        console.log("Highlighting button:", buttonId);
         const buttons = ["simpleBtn", "timedBtn", "explosionsBtn"];
         buttons.forEach(id => {
-            document.getElementById(id).classList.remove("active");
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.classList.remove("active");
+            }
         });
-        document.getElementById(buttonId).classList.add("active");
+        const targetBtn = document.getElementById(buttonId);
+        if (targetBtn) {
+            targetBtn.classList.add("active");
+        }
     }
 
     createGemGradient(baseColor) {
@@ -415,52 +452,117 @@ class GemGame {
     }
 
     updateScoreDisplay() {
-        const roundedScore = Math.round(this.score);
-        document.getElementById("score").innerHTML = `SCORE<br>${roundedScore
-            .toString()
-            .padStart(8, "0")}`;
+        const scoreElement = document.getElementById("score");
+        if (scoreElement) {
+            const roundedScore = Math.round(this.score);
+            scoreElement.innerHTML = `SCORE<br>${roundedScore.toString().padStart(8, "0")}`;
+        } else {
+            console.error("Score element not found!");
+        }
     }
 
     updateTimerDisplay() {
-        const minutes = Math.floor(this.timeLeft / 60);
-        const seconds = Math.floor(this.timeLeft % 60);
-        document.getElementById("timer").innerHTML = `TIME<br>${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-        if (this.timeLeft <= 0 && this.gameMode === "TIMED") {
-            this.endGame();
+        const timerElement = document.getElementById("timer");
+        if (timerElement) {
+            const minutes = Math.floor(this.timeLeft / 60);
+            const seconds = Math.floor(this.timeLeft % 60);
+            timerElement.innerHTML = `TIME<br>${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+            if (this.timeLeft <= 0 && this.gameMode === "TIMED") {
+                this.endGame();
+            }
+        } else {
+            console.error("Timer element not found!");
         }
     }
 
     updateBonusDisplay() {
-        let displayMultiplier = Math.round(this.bonusMultiplier);
-        if (displayMultiplier > 99) displayMultiplier = 99;
-        document.getElementById(
-            "bonusMultiplier"
-        ).innerHTML = `Multiplier: x${displayMultiplier}`;
+        const bonusElement = document.getElementById("bonusMultiplier");
+        if (bonusElement) {
+            let displayMultiplier = Math.round(this.bonusMultiplier);
+            if (displayMultiplier > 99) displayMultiplier = 99;
+            bonusElement.innerHTML = `Multiplier: x${displayMultiplier}`;
+        } else {
+            console.error("Bonus multiplier element not found!");
+        }
     }
 
     async fetchLeaderboard() {
+        console.log("Fetching leaderboard...");
         try {
             const response = await fetch('http://localhost:3000/proxy/fetch-scores');
             if (!response.ok) throw new Error('Network response was not ok');
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
+            console.log("Leaderboard fetched successfully:", scores);
         } catch (err) {
             console.error('Error fetching leaderboard:', err);
             this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [] });
         }
     }
 
+    filterName(name) {
+        console.log("Entering filterName with name:", name);
+
+        const trimmedName = name.trim();
+        const lowerName = trimmedName.toLowerCase();
+        console.log("Trimmed and lowercased name:", lowerName);
+
+        // Check length constraints
+        if (trimmedName.length < 1 || trimmedName.length > 32) {
+            console.log("Name rejected: Length out of bounds (1-32 characters)");
+            return false;
+        }
+
+        const bannedPatterns = [
+            /\bn[i1][g6]{1,2}[e3][r]/i,      //Hard-R Variations RESTRICTED
+            /\bf[a@][g6]{1,2}[o0][t]/i,      //F-Word Variations RESTRICTED
+            /\b[a@][s$][s$]/i,               //"ass" (e.g., "@$$") RESTRICTED
+            /\bf[uü][c¢k][k]/i,             //"fuck" (e.g., "fück") RESTRICTED
+            /\bsh[i1][t]/i,                 //"shit" (e.g., "sh1t") RESTRICTED
+            /\bb[i1][t][c¢][h]/i,          //"bitch" (e.g., "b1tch") RESTRICTED
+            /\bc[uü][n][t]/i,              //"cunt" (e.g., "cünt") RESTRICTED
+            /\bp[uü][s$][s$][y]/i,         //"pussy" (e.g., "pu$$y") RESTRICTED
+            /\bd[i1][c¢][k]/i,             //"dick" (e.g., "d1ck") RESTRICTED
+            /\bc[o0][c¢][k]/i,             //"cock" (e.g., "c0ck") RESTRICTED
+            /\bwh[o0][r][e]/i,             //"whore" (e.g., "wh0re") RESTRICTED
+            /\bsl[uü][t]/i,                //"slut" (e.g., "slüt") RESTRICTED
+            /\bd[a@][m][n]/i,              //"damn" (e.g., "d@mn") RESTRICTED
+            /\bb[a@][s$][t][a@][r][d]/i,   //"bastard" (e.g., "b@stard") RESTRICTED
+            /\br[e3][t][a@][r][d]/i,       //"retard" (e.g., "r3tard") RESTRICTED
+            /[^\w\s-]/,                     //Disallow special characters except hyphen
+            /\s{2,}/                        //Disallow multiple consecutive spaces
+        ];
+
+        for (let pattern of bannedPatterns) {
+            const matchesPattern = pattern.test(lowerName);
+            console.log(`Testing pattern ${pattern}: ${matchesPattern}`);
+            if (matchesPattern) {
+                console.log(`Name rejected: Matches pattern ${pattern}`);
+                return false;
+            }
+        }
+
+        console.log("Name accepted: No issues found");
+        return true;
+    }
+
     async submitScore(name, score, mode) {
+        console.log("Entering submitScore with name:", name, "score:", score, "mode:", mode);
         try {
+            if (!this.filterName(name)) {
+                console.warn("Inappropriate name detected, using 'Anonymous'");
+                name = "Anonymous";
+            }
+            console.log("Submitting score with name:", name);
+
             const response = await fetch('http://localhost:3000/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode }),
             });
             if (!response.ok) throw new Error('Failed to submit score');
-            await this.fetchLeaderboard(); // Refresh leaderboard after submission
+            await this.fetchLeaderboard();
+            console.log("Score submitted successfully");
         } catch (err) {
             console.error('Error submitting score:', err);
         }
@@ -532,6 +634,7 @@ class GemGame {
     }
 
     startNewGame() {
+        console.log("Starting new game...");
         this.score = 0;
         this.grid = this.createGrid();
         this.selectedGem = null;
@@ -549,33 +652,52 @@ class GemGame {
             document.getElementById("timer").style.display = "none";
             this.stopTimer();
         }
+        console.log("New game started.");
     }
 
     setMode(mode) {
+        console.log("Setting game mode to:", mode);
         this.gameMode = mode;
         this.startNewGame();
     }
 
     endGame() {
+        console.log("Ending game (auto-end)...");
         this.stopTimer();
         
-        // For Timed mode auto-end
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
+        console.log("Player entered name:", playerName);
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
+            console.log("Name was null or empty, set to 'Anonymous'");
         }
-        this.submitScore(playerName.trim(), Math.round(this.score), this.gameMode);
+        playerName = playerName.trim();
+        if (!this.filterName(playerName)) {
+            console.log("Name failed filter, alerting user...");
+            alert("That name is not allowed. Using 'Anonymous' instead.");
+            playerName = "Anonymous";
+        }
+        this.submitScore(playerName, Math.round(this.score), this.gameMode);
         this.startNewGame();
     }
 
     endGameWithName() {
+        console.log("Ending game (manual end)...");
         this.stopTimer();
         
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
+        console.log("Player entered name:", playerName);
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
+            console.log("Name was null or empty, set to 'Anonymous'");
         }
-        this.submitScore(playerName.trim(), Math.round(this.score), this.gameMode);
+        playerName = playerName.trim();
+        if (!this.filterName(playerName)) {
+            console.log("Name failed filter, alerting user...");
+            alert("That name is not allowed. Using 'Anonymous' instead.");
+            playerName = "Anonymous";
+        }
+        this.submitScore(playerName, Math.round(this.score), this.gameMode);
         this.startNewGame();
     }
 }
