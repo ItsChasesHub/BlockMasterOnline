@@ -6,25 +6,32 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const sanitize = require('mongo-sanitize');
 
-require('dotenv').config(); //Loads the env vars from .env locally, but is ignored on Render
+require('dotenv').config(); // Loads the env vars from .env locally, but ignored on Render
 
 const app = express();
 
+// Serve static files from the client directory
 app.use(express.static(path.join(__dirname, '../client')));
 
+// Serve blockmaster.html as the default route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
-//app.use(cors());
+// Handle favicon.ico requests to avoid 404 errors
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+// Middleware
+app.use(cors()); // Optional: Remove if frontend and backend are on the same domain
 app.use(express.json());
 
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, //15 minutes
-  max: 100, //100 requests per IP
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per IP
   message: 'Too many requests from this IP, please try again after 15 minutes.'
 }));
 
+// Log environment variables for debugging
 console.log('Environment variables loaded:');
 console.log('MONGO_URI:', process.env.MONGO_URI ? process.env.MONGO_URI : 'Not set');
 console.log('SCORE_SUBMIT_ENDPOINT:', process.env.SCORE_SUBMIT_ENDPOINT);
@@ -33,6 +40,7 @@ console.log('MONGO_COLLECTION_NAME:', process.env.MONGO_COLLECTION_NAME);
 console.log('PORT:', process.env.PORT);
 console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
 
+// Validate required environment variables
 if (!process.env.MONGO_URI) {
   throw new Error('MONGO_URI is not defined. Please set it in Render environment variables.');
 }
@@ -43,26 +51,31 @@ if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
 
-const authenticate = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== process.env.API_KEY) {
-    return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
-  }
-  next();
-};
-
-mongoose.connect(process.env.MONGO_URI)
+// Connect to MongoDB Atlas with better options
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+  connectTimeoutMS: 10000, // Timeout connection after 10 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+})
   .then(() => console.log('MongoDB Atlas connected successfully'))
-  .catch(err => console.error('MongoDB Atlas connection error:', err));
+  .catch(err => {
+    console.error('MongoDB Atlas connection error:', err);
+    process.exit(1); // Exit the process if MongoDB fails to connect
+  });
 
 const Score = require('./models/Score');
 
+const PORT = process.env.PORT || 3000;
 const SCORE_SUBMIT_ENDPOINT = process.env.SCORE_SUBMIT_ENDPOINT || '/submit-score';
 const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores';
+
+// Construct the base URL for fetch calls
+const BASE_URL = `http://localhost:${PORT}`;
 
 console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
 console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
 
+// Proxy endpoint for submitting scores
 app.post('/proxy/submit-score', [
   body('name')
     .isString().withMessage('Name must be a string')
@@ -82,7 +95,7 @@ app.post('/proxy/submit-score', [
   }
 
   try {
-    const response = await fetch(`${SCORE_SUBMIT_ENDPOINT}`, {
+    const response = await fetch(`${BASE_URL}${SCORE_SUBMIT_ENDPOINT}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -90,29 +103,37 @@ app.post('/proxy/submit-score', [
       },
       body: JSON.stringify(req.body)
     });
+    if (!response.ok) {
+      throw new Error(`Submit score failed with status ${response.status}: ${await response.text()}`);
+    }
     const data = await response.json();
     res.status(response.status).json(data);
   } catch (err) {
-    console.error('Error in proxy/submit-score:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in proxy/submit-score:', err.message);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 
+// Proxy endpoint for fetching scores
 app.get('/proxy/fetch-scores', async (req, res) => {
   try {
-    const response = await fetch(`${SCORE_FETCH_ENDPOINT}`, {
+    const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
       headers: {
         'x-api-key': process.env.API_KEY
       }
     });
+    if (!response.ok) {
+      throw new Error(`Fetch scores failed with status ${response.status}: ${await response.text()}`);
+    }
     const data = await response.json();
     res.status(response.status).json(data);
   } catch (err) {
-    console.error('Error in proxy/fetch-scores:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in proxy/fetch-scores:', err.message);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 
+// Authenticated endpoint to submit scores
 app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   body('name')
     .isString().withMessage('Name must be a string')
@@ -149,6 +170,7 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   }
 });
 
+// Authenticated endpoint to fetch scores
 app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
   console.log('GET request received at:', SCORE_FETCH_ENDPOINT);
   try {
@@ -177,5 +199,4 @@ app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
