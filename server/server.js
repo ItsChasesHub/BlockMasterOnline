@@ -10,31 +10,25 @@ require('dotenv').config();
 
 const app = express();
 
-// Trust the proxy (Render's load balancer) to get the correct client IP
-app.set('trust proxy', true);
+app.set('trust proxy', 'loopback');
 
-// Serve static files from the client directory
 app.use(express.static(path.join(__dirname, '../client')));
 
-// Serve blockmaster.html as the default route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
-// Handle favicon.ico requests to avoid 404 errors
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Middleware
-app.use(cors()); // Optional: Remove if frontend and backend are on the same domain
+app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per IP
+  windowMs: 15 * 60 * 1000, //15 minutes
+  max: 100, //100 requests per IP
   message: 'Too many requests from this IP, please try again after 15 minutes.'
 }));
 
-// Log environment variables for debugging
 console.log('Environment variables loaded:');
 console.log('MONGO_URI:', process.env.MONGO_URI ? process.env.MONGO_URI : 'Not set');
 console.log('SCORE_SUBMIT_ENDPOINT:', process.env.SCORE_SUBMIT_ENDPOINT);
@@ -43,7 +37,6 @@ console.log('MONGO_COLLECTION_NAME:', process.env.MONGO_COLLECTION_NAME);
 console.log('PORT:', process.env.PORT);
 console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
 
-// Validate required environment variables
 if (!process.env.MONGO_URI) {
   throw new Error('MONGO_URI is not defined. Please set it in Render environment variables.');
 }
@@ -66,9 +59,9 @@ const authenticate = (req, res, next) => {
 };
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-  connectTimeoutMS: 10000, // Timeout connection after 10 seconds
-  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  serverSelectionTimeoutMS: 5000, //Timeout after 5 seconds
+  connectTimeoutMS: 10000, //Timeout connection after 10 seconds
+  socketTimeoutMS: 45000, //Close sockets after 45 seconds of inactivity
 })
   .then(() => console.log('MongoDB Atlas connected successfully'))
   .catch(err => {
