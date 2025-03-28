@@ -16,18 +16,18 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; // 5 minutes for TIMED mode
+        this.timeLeft = 300; //5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
 
         this.gemColors = [
-            "#8B0000", // Dark Red
-            "#006400", // Dark Green
-            "#00008B", // Dark Blue
-            "#DAA520", // Goldenrod
-            "#4B0082", // Indigo
-            "#8B4513", // Saddle Brown
+            "#8B0000", //Dark Red
+            "#006400", //Dark Green
+            "#00008B", //Dark Blue
+            "#DAA520", //Goldenrod
+            "#4B0082", //Indigo
+            "#8B4513", //Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
@@ -36,7 +36,6 @@ class GemGame {
         this.selectedGem = null;
         this.isAnimating = false;
 
-        // Add event listeners with error handling
         const newGameBtn = document.getElementById("newGameBtn");
         if (newGameBtn) {
             newGameBtn.addEventListener("click", () => this.startNewGame());
@@ -79,6 +78,13 @@ class GemGame {
             endGameBtn.addEventListener("click", () => this.endGameWithName());
         } else {
             console.error("endGameBtn not found!");
+        }
+
+        const discardGameBtn = document.getElementById("discardGameBtn");
+        if (discardGameBtn) {
+            discardGameBtn.addEventListener("click", () => this.discardGame());
+        } else {
+            console.error("discardGameBtn not found!");
         }
 
         this.canvas.addEventListener("click", this.handleClick.bind(this));
@@ -484,7 +490,6 @@ class GemGame {
         } catch (err) {
             console.error('Error fetching leaderboard:', err.message);
             this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [] });
-            // Optionally notify the user
             alert('Failed to fetch leaderboard. Please try again later.');
         }
     }
@@ -553,11 +558,9 @@ class GemGame {
             }
             await this.fetchLeaderboard();
             console.log("Score submitted successfully");
-            // Optionally notify the user
             alert('Score submitted successfully!');
         } catch (err) {
             console.error('Error submitting score:', err.message);
-            // Notify the user of the failure
             alert('Failed to submit score. Please try again later.');
         }
     }
@@ -665,19 +668,23 @@ class GemGame {
         console.log("Ending game (auto-end)...");
         this.stopTimer();
 
-        let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
-        console.log("Player entered name:", playerName);
-        if (playerName === null || playerName.trim() === "") {
-            playerName = "Anonymous";
-            console.log("Name was null or empty, set to 'Anonymous'");
+        if (this.score > 0) {
+            let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
+            console.log("Player entered name:", playerName);
+            if (playerName === null || playerName.trim() === "") {
+                playerName = "Anonymous";
+                console.log("Name was null or empty, set to 'Anonymous'");
+            }
+            playerName = playerName.trim();
+            if (!this.filterName(playerName)) {
+                console.log("Name failed filter, alerting user...");
+                alert("That name is not allowed. Using 'Anonymous' instead.");
+                playerName = "Anonymous";
+            }
+            this.submitScore(playerName, Math.round(this.score), this.gameMode);
+        } else {
+            console.log("Score is 0, skipping username prompt and submission.");
         }
-        playerName = playerName.trim();
-        if (!this.filterName(playerName)) {
-            console.log("Name failed filter, alerting user...");
-            alert("That name is not allowed. Using 'Anonymous' instead.");
-            playerName = "Anonymous";
-        }
-        this.submitScore(playerName, Math.round(this.score), this.gameMode);
         this.startNewGame();
     }
 
@@ -685,19 +692,29 @@ class GemGame {
         console.log("Ending game (manual end)...");
         this.stopTimer();
 
-        let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
-        console.log("Player entered name:", playerName);
-        if (playerName === null || playerName.trim() === "") {
-            playerName = "Anonymous";
-            console.log("Name was null or empty, set to 'Anonymous'");
+        if (this.score > 0) {
+            let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
+            console.log("Player entered name:", playerName);
+            if (playerName === null || playerName.trim() === "") {
+                playerName = "Anonymous";
+                console.log("Name was null or empty, set to 'Anonymous'");
+            }
+            playerName = playerName.trim();
+            if (!this.filterName(playerName)) {
+                console.log("Name failed filter, alerting user...");
+                alert("That name is not allowed. Using 'Anonymous' instead.");
+                playerName = "Anonymous";
+            }
+            this.submitScore(playerName, Math.round(this.score), this.gameMode);
+        } else {
+            console.log("Score is 0, skipping username prompt and submission.");
         }
-        playerName = playerName.trim();
-        if (!this.filterName(playerName)) {
-            console.log("Name failed filter, alerting user...");
-            alert("That name is not allowed. Using 'Anonymous' instead.");
-            playerName = "Anonymous";
-        }
-        this.submitScore(playerName, Math.round(this.score), this.gameMode);
+        this.startNewGame();
+    }
+
+    discardGame() {
+        console.log("Discarding game...");
+        this.stopTimer();
         this.startNewGame();
     }
 }
