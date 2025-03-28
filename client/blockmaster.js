@@ -444,7 +444,7 @@ class GemGame {
 
     async fetchLeaderboard() {
         try {
-            const response = await fetch('http://localhost:3000/q3j8v5iqnzn-fetch');
+            const response = await fetch('http://localhost:3000/proxy/fetch-scores');
             if (!response.ok) throw new Error('Network response was not ok');
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -456,7 +456,7 @@ class GemGame {
 
     async submitScore(name, score, mode) {
         try {
-            const response = await fetch('http://localhost:3000/h7k97qsb2m-submit', {
+            const response = await fetch('http://localhost:3000/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode }),
