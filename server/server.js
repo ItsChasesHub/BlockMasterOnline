@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const sanitize = require('mongo-sanitize');
 
-require('dotenv').config(); //Loads the env vars from .env locally, but ignored on Render
+require('dotenv').config(); //Loads the env vars from .env locally, but is ignored on Render
 
 const app = express();
 
@@ -82,7 +82,7 @@ app.post('/proxy/submit-score', [
   }
 
   try {
-    const response = await fetch(`${SCORE_SUBMIT_ENDPOINT}`, { 
+    const response = await fetch(`${SCORE_SUBMIT_ENDPOINT}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ app.post('/proxy/submit-score', [
 
 app.get('/proxy/fetch-scores', async (req, res) => {
   try {
-    const response = await fetch(`${SCORE_FETCH_ENDPOINT}`, { 
+    const response = await fetch(`${SCORE_FETCH_ENDPOINT}`, {
       headers: {
         'x-api-key': process.env.API_KEY
       }
