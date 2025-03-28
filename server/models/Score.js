@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
 
 const ScoreSchema = new mongoose.Schema({
-    name: { type: String, required: true }, // Store the player's name directly
+    name: { type: String, required: true },
     score: { type: Number, required: true },
-    mode: { type: String, required: true, enum: ['SIMPLE', 'TIMED', 'EXPLOSIONS'] }, // Game mode
+    mode: { type: String, required: true, enum: ['SIMPLE', 'TIMED', 'EXPLOSIONS'] },
     createdAt: { type: Date, default: Date.now }
 }, {
-    versionKey: false // Disable the __v field
+    versionKey: false
 });
 
-// Explicitly set the collection name to 'LeaderboardScores'
-module.exports = mongoose.model('LeaderboardsScores', ScoreSchema, 'LeaderboardScores');
+module.exports = mongoose.model('LeaderboardsScores', ScoreSchema, process.env.MONGO_COLLECTION_NAME || 'LeaderboardScores');

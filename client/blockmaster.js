@@ -369,7 +369,7 @@ class GemGame {
 
         let explosionMatches = [...matches];
 
-        if (this.gemMode === "EXPLOSIONS") {
+        if (this.gameMode === "EXPLOSIONS") {
             matches.forEach(match => {
                 if (Math.random() < 0.3) {
                     this.grid[match.x][match.y].isExplosive = true;
@@ -442,10 +442,9 @@ class GemGame {
         ).innerHTML = `Multiplier: x${displayMultiplier}`;
     }
 
-    // Fetch leaderboard from the backend
     async fetchLeaderboard() {
         try {
-            const response = await fetch('http://localhost:3000/api/scores');
+            const response = await fetch('http://localhost:3000/q3j8v5iqnzn-fetch');
             if (!response.ok) throw new Error('Network response was not ok');
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -455,10 +454,9 @@ class GemGame {
         }
     }
 
-    // Submit score to the backend
     async submitScore(name, score, mode) {
         try {
-            const response = await fetch('http://localhost:3000/api/scores', {
+            const response = await fetch('http://localhost:3000/h7k97qsb2m-submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode }),
@@ -470,7 +468,6 @@ class GemGame {
         }
     }
 
-    // Update leaderboard display with data from backend
     updateLeaderboardDisplay(scores) {
         const simpleScores = scores.simple || [];
         const timedScores = scores.timed || [];
@@ -564,7 +561,7 @@ class GemGame {
     endGame() {
         this.stopTimer();
         
-        // For Timed mode auto-end, prompt and submit to backend
+        // For Timed mode auto-end
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
@@ -576,7 +573,7 @@ class GemGame {
     endGameWithName() {
         this.stopTimer();
         
-        // Prompt for player name and submit to backend
+        // Prompt for player name 
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
