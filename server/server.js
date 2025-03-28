@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
-app.use(cors());
+//app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
