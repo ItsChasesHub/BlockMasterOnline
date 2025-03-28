@@ -7,18 +7,18 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; // 5 minutes for TIMED mode
+        this.timeLeft = 300; //5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
 
         this.gemColors = [
-            "#8B0000", // Dark Red
-            "#006400", // Dark Green
-            "#00008B", // Dark Blue
-            "#DAA520", // Goldenrod
-            "#4B0082", // Indigo
-            "#8B4513", // Saddle Brown
+            "#8B0000", //Dark Red
+            "#006400", //Dark Green
+            "#00008B", //Dark Blue
+            "#DAA520", //Goldenrod
+            "#4B0082", //Indigo
+            "#8B4513", //Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) =>
@@ -29,7 +29,6 @@ class GemGame {
         this.selectedGem = null;
         this.isAnimating = false;
 
-        // Event listeners for buttons
         document
             .getElementById("newGameBtn")
             .addEventListener("click", () => this.startNewGame());
@@ -59,9 +58,8 @@ class GemGame {
         this.updateScoreDisplay();
         this.updateTimerDisplay();
         this.updateBonusDisplay();
-        this.fetchLeaderboard(); // Fetch leaderboard on initialization
+        this.fetchLeaderboard();
         
-        // Set initial highlight
         this.highlightButton("simpleBtn");
         
         this.animate();
@@ -573,7 +571,6 @@ class GemGame {
     endGameWithName() {
         this.stopTimer();
         
-        // Prompt for player name 
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
