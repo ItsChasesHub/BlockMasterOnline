@@ -7,18 +7,18 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; // 5 minutes for TIMED mode
+        this.timeLeft = 300; //5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
 
         this.gemColors = [
-            "#8B0000", // Dark Red
-            "#006400", // Dark Green
-            "#00008B", // Dark Blue
-            "#DAA520", // Goldenrod
-            "#4B0082", // Indigo
-            "#8B4513", // Saddle Brown
+            "#8B0000", //Dark Red
+            "#006400", //Dark Green
+            "#00008B", //Dark Blue
+            "#DAA520", //Goldenrod
+            "#4B0082", //Indigo
+            "#8B4513", //Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) =>
@@ -29,7 +29,6 @@ class GemGame {
         this.selectedGem = null;
         this.isAnimating = false;
 
-        // Event listeners for buttons
         document
             .getElementById("newGameBtn")
             .addEventListener("click", () => this.startNewGame());
@@ -59,9 +58,8 @@ class GemGame {
         this.updateScoreDisplay();
         this.updateTimerDisplay();
         this.updateBonusDisplay();
-        this.fetchLeaderboard(); // Fetch leaderboard on initialization
+        this.fetchLeaderboard();
         
-        // Set initial highlight
         this.highlightButton("simpleBtn");
         
         this.animate();
@@ -369,7 +367,7 @@ class GemGame {
 
         let explosionMatches = [...matches];
 
-        if (this.gemMode === "EXPLOSIONS") {
+        if (this.gameMode === "EXPLOSIONS") {
             matches.forEach(match => {
                 if (Math.random() < 0.3) {
                     this.grid[match.x][match.y].isExplosive = true;
@@ -442,10 +440,9 @@ class GemGame {
         ).innerHTML = `Multiplier: x${displayMultiplier}`;
     }
 
-    // Fetch leaderboard from the backend
     async fetchLeaderboard() {
         try {
-            const response = await fetch('http://localhost:3000/api/scores');
+            const response = await fetch('http://localhost:3000/proxy/fetch-scores');
             if (!response.ok) throw new Error('Network response was not ok');
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -455,10 +452,9 @@ class GemGame {
         }
     }
 
-    // Submit score to the backend
     async submitScore(name, score, mode) {
         try {
-            const response = await fetch('http://localhost:3000/api/scores', {
+            const response = await fetch('http://localhost:3000/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode }),
@@ -470,7 +466,6 @@ class GemGame {
         }
     }
 
-    // Update leaderboard display with data from backend
     updateLeaderboardDisplay(scores) {
         const simpleScores = scores.simple || [];
         const timedScores = scores.timed || [];
@@ -564,7 +559,7 @@ class GemGame {
     endGame() {
         this.stopTimer();
         
-        // For Timed mode auto-end, prompt and submit to backend
+        // For Timed mode auto-end
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
@@ -576,7 +571,6 @@ class GemGame {
     endGameWithName() {
         this.stopTimer();
         
-        // Prompt for player name and submit to backend
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         if (playerName === null || playerName.trim() === "") {
             playerName = "Anonymous";
