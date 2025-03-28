@@ -51,6 +51,15 @@ if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
 
+// Authentication middleware
+const authenticate = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || apiKey !== process.env.API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
+  }
+  next();
+};
+
 // Connect to MongoDB Atlas with better options
 mongoose.connect(process.env.MONGO_URI, {
   serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
@@ -65,7 +74,6 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const Score = require('./models/Score');
 
-const PORT = process.env.PORT || 3000;
 const SCORE_SUBMIT_ENDPOINT = process.env.SCORE_SUBMIT_ENDPOINT || '/submit-score';
 const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores';
 

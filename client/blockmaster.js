@@ -16,18 +16,18 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; //5 minutes for TIMED mode
+        this.timeLeft = 300; // 5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
 
         this.gemColors = [
-            "#8B0000", //Dark Red
-            "#006400", //Dark Green
-            "#00008B", //Dark Blue
-            "#DAA520", //Goldenrod
-            "#4B0082", //Indigo
-            "#8B4513", //Saddle Brown
+            "#8B0000", // Dark Red
+            "#006400", // Dark Green
+            "#00008B", // Dark Blue
+            "#DAA520", // Goldenrod
+            "#4B0082", // Indigo
+            "#8B4513", // Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
@@ -36,6 +36,7 @@ class GemGame {
         this.selectedGem = null;
         this.isAnimating = false;
 
+        // Add event listeners with error handling
         const newGameBtn = document.getElementById("newGameBtn");
         if (newGameBtn) {
             newGameBtn.addEventListener("click", () => this.startNewGame());
@@ -474,13 +475,17 @@ class GemGame {
         console.log("Fetching leaderboard...");
         try {
             const response = await fetch('/proxy/fetch-scores');
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch leaderboard: ${response.status} ${response.statusText}`);
+            }
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
             console.log("Leaderboard fetched successfully:", scores);
         } catch (err) {
-            console.error('Error fetching leaderboard:', err);
+            console.error('Error fetching leaderboard:', err.message);
             this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [] });
+            // Optionally notify the user
+            alert('Failed to fetch leaderboard. Please try again later.');
         }
     }
 
@@ -543,11 +548,17 @@ class GemGame {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode }),
             });
-            if (!response.ok) throw new Error('Failed to submit score');
+            if (!response.ok) {
+                throw new Error(`Failed to submit score: ${response.status} ${response.statusText}`);
+            }
             await this.fetchLeaderboard();
             console.log("Score submitted successfully");
+            // Optionally notify the user
+            alert('Score submitted successfully!');
         } catch (err) {
-            console.error('Error submitting score:', err);
+            console.error('Error submitting score:', err.message);
+            // Notify the user of the failure
+            alert('Failed to submit score. Please try again later.');
         }
     }
 
@@ -629,11 +640,17 @@ class GemGame {
         this.updateTimerDisplay();
         this.updateBonusDisplay();
         if (this.gameMode === "TIMED") {
-            document.getElementById("timer").style.display = "block";
-            this.startTimer();
+            const timerElement = document.getElementById("timer");
+            if (timerElement) {
+                timerElement.style.display = "block";
+                this.startTimer();
+            }
         } else {
-            document.getElementById("timer").style.display = "none";
-            this.stopTimer();
+            const timerElement = document.getElementById("timer");
+            if (timerElement) {
+                timerElement.style.display = "none";
+                this.stopTimer();
+            }
         }
         console.log("New game started.");
     }
