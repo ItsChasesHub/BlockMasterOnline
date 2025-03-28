@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const rateLimit = require('express-rate-limit'); 
-
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
+const sanitize = require('mongo-sanitize');
 
 const envPath = path.resolve(__dirname, '.env');
 console.log('Looking for .env file at:', envPath);
@@ -18,7 +19,13 @@ require('dotenv').config({ path: envPath });
 
 const app = express();
 
-app.use(cors()); //Allows all origins (for development)
+app.use(express.static(path.join(__dirname, 'client')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'blockmaster.html'));
+});
+
+app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
@@ -71,7 +78,24 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
-app.post('/proxy/submit-score', async (req, res) => {
+app.post('/proxy/submit-score', [
+  body('name')
+    .isString().withMessage('Name must be a string')
+    .trim()
+    .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
+    .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
+    .customSanitizer(value => sanitize(value)), //Sanitized to prevent NoSQL injection
+  body('score')
+    .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
+  body('mode')
+    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS']).withMessage('Mode must be SIMPLE, TIMED, or EXPLOSIONS'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.warn('Validation errors in /proxy/submit-score:', errors.array());
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const response = await fetch(`http://localhost:3000${process.env.SCORE_SUBMIT_ENDPOINT}`, {
       method: 'POST',
@@ -104,20 +128,28 @@ app.get('/proxy/fetch-scores', async (req, res) => {
   }
 });
 
-app.post(SCORE_SUBMIT_ENDPOINT, authenticate, async (req, res) => {
+app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
+  body('name')
+    .isString().withMessage('Name must be a string')
+    .trim()
+    .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
+    .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
+    .customSanitizer(value => sanitize(value)), //Sanitized to prevent NoSQL injection
+  body('score')
+    .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
+  body('mode')
+    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS']).withMessage('Mode must be SIMPLE, TIMED, or EXPLOSIONS'),
+], async (req, res) => {
   console.log('POST request received at:', SCORE_SUBMIT_ENDPOINT);
   console.log('Request body:', req.body);
-  const { name, score, mode } = req.body;
 
-  if (!name || typeof name !== 'string' || name.length > 32) {
-    return res.status(400).json({ error: 'Invalid name: Must be a string with max length 32' });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.warn('Validation errors in /submit-score:', errors.array());
+    return res.status(400).json({ errors: errors.array() });
   }
-  if (!Number.isInteger(score) || score < 0 || score > 2000000000) {
-    return res.status(400).json({ error: 'Invalid score: Must be an integer between 0 and 2,000,000,000' });
-  }
-  if (!['SIMPLE', 'TIMED', 'EXPLOSIONS'].includes(mode)) {
-    return res.status(400).json({ error: 'Invalid mode: Must be SIMPLE, TIMED, or EXPLOSIONS' });
-  }
+
+  const { name, score, mode } = req.body;
 
   try {
     const newScore = new Score({ name, score, mode });
