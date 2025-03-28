@@ -51,6 +51,12 @@ if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
 
+// Define PORT before using it
+const PORT = process.env.PORT || 3000;
+
+// Construct the base URL for fetch calls
+const BASE_URL = `http://localhost:${PORT}`;
+
 // Authentication middleware
 const authenticate = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
@@ -76,9 +82,6 @@ const Score = require('./models/Score');
 
 const SCORE_SUBMIT_ENDPOINT = process.env.SCORE_SUBMIT_ENDPOINT || '/submit-score';
 const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores';
-
-// Construct the base URL for fetch calls
-const BASE_URL = `http://localhost:${PORT}`;
 
 console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
 console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
