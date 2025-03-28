@@ -30,15 +30,12 @@ class GemGame {
             "#8B4513", //Saddle Brown
         ];
 
-        this.gemStyles = this.gemColors.map((color) =>
-            this.createGemGradient(color)
-        );
+        this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
 
         this.grid = this.createGrid();
         this.selectedGem = null;
         this.isAnimating = false;
 
-        // Add event listeners with error handling
         const newGameBtn = document.getElementById("newGameBtn");
         if (newGameBtn) {
             newGameBtn.addEventListener("click", () => this.startNewGame());
@@ -88,9 +85,9 @@ class GemGame {
         this.updateTimerDisplay();
         this.updateBonusDisplay();
         this.fetchLeaderboard();
-        
+
         this.highlightButton("simpleBtn");
-        
+
         this.animate();
         console.log("GemGame constructor completed.");
     }
@@ -262,8 +259,7 @@ class GemGame {
                     const fallDistance = writeIndex - y;
                     if (fallDistance > 0) {
                         this.grid[x][writeIndex].targetOffsetY = 0;
-                        this.grid[x][writeIndex].offsetY =
-                            -fallDistance * this.tileSize;
+                        this.grid[x][writeIndex].offsetY = -fallDistance * this.tileSize;
                         columnsToFill.add(x);
                     }
                     writeIndex--;
@@ -289,11 +285,7 @@ class GemGame {
     }
 
     handleClick(event) {
-        if (
-            this.isAnimating ||
-            (this.gameMode === "TIMED" && this.timeLeft <= 0)
-        )
-            return;
+        if (this.isAnimating || (this.gameMode === "TIMED" && this.timeLeft <= 0)) return;
 
         const rect = this.canvas.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
@@ -305,8 +297,7 @@ class GemGame {
         const x = Math.floor((clickX * scaleX) / this.tileSize);
         const y = Math.floor((clickY * scaleY) / this.tileSize);
 
-        if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize)
-            return;
+        if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return;
 
         if (!this.selectedGem) {
             this.selectedGem = { x, y };
@@ -359,10 +350,8 @@ class GemGame {
                     gridToCheck[x][y] &&
                     gridToCheck[x + 1][y] &&
                     gridToCheck[x + 2][y] &&
-                    gridToCheck[x][y].style.base ===
-                        gridToCheck[x + 1][y].style.base &&
-                    gridToCheck[x][y].style.base ===
-                        gridToCheck[x + 2][y].style.base
+                    gridToCheck[x][y].style.base === gridToCheck[x + 1][y].style.base &&
+                    gridToCheck[x][y].style.base === gridToCheck[x + 2][y].style.base
                 ) {
                     matches.push({ x, y }, { x: x + 1, y }, { x: x + 2, y });
                 }
@@ -375,22 +364,18 @@ class GemGame {
                     gridToCheck[x][y] &&
                     gridToCheck[x][y + 1] &&
                     gridToCheck[x][y + 2] &&
-                    gridToCheck[x][y].style.base ===
-                        gridToCheck[x][y + 1].style.base &&
-                    gridToCheck[x][y].style.base ===
-                        gridToCheck[x][y + 2].style.base
+                    gridToCheck[x][y].style.base === gridToCheck[x][y + 1].style.base &&
+                    gridToCheck[x][y].style.base === gridToCheck[x][y + 2].style.base
                 ) {
                     matches.push({ x, y }, { x, y: y + 1 }, { x, y: y + 2 });
                 }
             }
         }
 
-        return Array.from(new Set(matches.map((m) => `${m.x},${m.y}`))).map(
-            (key) => {
-                const [x, y] = key.split(",").map(Number);
-                return { x, y };
-            }
-        );
+        return Array.from(new Set(matches.map((m) => `${m.x},${m.y}`))).map((key) => {
+            const [x, y] = key.split(",").map(Number);
+            return { x, y };
+        });
     }
 
     removeMatches(matches) {
@@ -409,9 +394,8 @@ class GemGame {
                 if (Math.random() < 0.3) {
                     this.grid[match.x][match.y].isExplosive = true;
                     const types = ['horizontal', 'vertical', 'both'];
-                    this.grid[match.x][match.y].explosionType = 
-                        types[Math.floor(Math.random() * types.length)];
-                    
+                    this.grid[match.x][match.y].explosionType = types[Math.floor(Math.random() * types.length)];
+
                     if (this.grid[match.x][match.y].explosionType === 'horizontal') {
                         for (let x = 0; x < this.gridSize; x++) {
                             if (x !== match.x && this.grid[x][match.y]) {
@@ -489,7 +473,7 @@ class GemGame {
     async fetchLeaderboard() {
         console.log("Fetching leaderboard...");
         try {
-            const response = await fetch('http://localhost:3000/proxy/fetch-scores');
+            const response = await fetch('/proxy/fetch-scores');
             if (!response.ok) throw new Error('Network response was not ok');
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -507,30 +491,29 @@ class GemGame {
         const lowerName = trimmedName.toLowerCase();
         console.log("Trimmed and lowercased name:", lowerName);
 
-        // Check length constraints
         if (trimmedName.length < 1 || trimmedName.length > 32) {
             console.log("Name rejected: Length out of bounds (1-32 characters)");
             return false;
         }
 
         const bannedPatterns = [
-            /\bn[i1][g6]{1,2}[e3][r]/i,      //Hard-R Variations RESTRICTED
-            /\bf[a@][g6]{1,2}[o0][t]/i,      //F-Word Variations RESTRICTED
-            /\b[a@][s$][s$]/i,               //"ass" (e.g., "@$$") RESTRICTED
-            /\bf[uü][c¢k][k]/i,             //"fuck" (e.g., "fück") RESTRICTED
-            /\bsh[i1][t]/i,                 //"shit" (e.g., "sh1t") RESTRICTED
-            /\bb[i1][t][c¢][h]/i,          //"bitch" (e.g., "b1tch") RESTRICTED
-            /\bc[uü][n][t]/i,              //"cunt" (e.g., "cünt") RESTRICTED
-            /\bp[uü][s$][s$][y]/i,         //"pussy" (e.g., "pu$$y") RESTRICTED
-            /\bd[i1][c¢][k]/i,             //"dick" (e.g., "d1ck") RESTRICTED
-            /\bc[o0][c¢][k]/i,             //"cock" (e.g., "c0ck") RESTRICTED
-            /\bwh[o0][r][e]/i,             //"whore" (e.g., "wh0re") RESTRICTED
-            /\bsl[uü][t]/i,                //"slut" (e.g., "slüt") RESTRICTED
-            /\bd[a@][m][n]/i,              //"damn" (e.g., "d@mn") RESTRICTED
-            /\bb[a@][s$][t][a@][r][d]/i,   //"bastard" (e.g., "b@stard") RESTRICTED
-            /\br[e3][t][a@][r][d]/i,       //"retard" (e.g., "r3tard") RESTRICTED
-            /[^\w\s-]/,                     //Disallow special characters except hyphen
-            /\s{2,}/                        //Disallow multiple consecutive spaces
+            /\bn[i1][g6]{1,2}[e3][r]/i,
+            /\bf[a@][g6]{1,2}[o0][t]/i,
+            /\b[a@][s$][s$]/i,
+            /\bf[uü][c¢k][k]/i,
+            /\bsh[i1][t]/i,
+            /\bb[i1][t][c¢][h]/i,
+            /\bc[uü][n][t]/i,
+            /\bp[uü][s$][s$][y]/i,
+            /\bd[i1][c¢][k]/i,
+            /\bc[o0][c¢][k]/i,
+            /\bwh[o0][r][e]/i,
+            /\bsl[uü][t]/i,
+            /\bd[a@][m][n]/i,
+            /\bb[a@][s$][t][a@][r][d]/i,
+            /\br[e3][t][a@][r][d]/i,
+            /[^\w\s-]/,
+            /\s{2,}/
         ];
 
         for (let pattern of bannedPatterns) {
@@ -555,7 +538,7 @@ class GemGame {
             }
             console.log("Submitting score with name:", name);
 
-            const response = await fetch('http://localhost:3000/proxy/submit-score', {
+            const response = await fetch('/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode }),
@@ -664,7 +647,7 @@ class GemGame {
     endGame() {
         console.log("Ending game (auto-end)...");
         this.stopTimer();
-        
+
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         console.log("Player entered name:", playerName);
         if (playerName === null || playerName.trim() === "") {
@@ -684,7 +667,7 @@ class GemGame {
     endGameWithName() {
         console.log("Ending game (manual end)...");
         this.stopTimer();
-        
+
         let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
         console.log("Player entered name:", playerName);
         if (playerName === null || playerName.trim() === "") {

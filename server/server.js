@@ -2,27 +2,18 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const sanitize = require('mongo-sanitize');
 
-const envPath = path.resolve(__dirname, '.env');
-console.log('Looking for .env file at:', envPath);
-if (!fs.existsSync(envPath)) {
-  console.error('Error: .env file not found at', envPath);
-  console.error('Please create a .env file with the required environment variables.');
-  process.exit(1);
-}
-
-require('dotenv').config({ path: envPath });
+require('dotenv').config(); //Loads the env vars from .env locally, but ignored on Render
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.static(path.join(__dirname, '../client')));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'blockmaster.html'));
+  res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
 app.use(cors());
@@ -43,15 +34,13 @@ console.log('PORT:', process.env.PORT);
 console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
 
 if (!process.env.MONGO_URI) {
-  throw new Error('MONGO_URI is not defined in the .env file. Please set it and restart the server.');
+  throw new Error('MONGO_URI is not defined. Please set it in Render environment variables.');
 }
-
 if (!process.env.MONGO_COLLECTION_NAME) {
-  throw new Error('MONGO_COLLECTION_NAME is not defined in the .env file. Please set it and restart the server.');
+  throw new Error('MONGO_COLLECTION_NAME is not defined. Please set it in Render environment variables.');
 }
-
 if (!process.env.API_KEY) {
-  throw new Error('API_KEY is not defined in the .env file. Please set it and restart the server.');
+  throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
 
 const authenticate = (req, res, next) => {
@@ -74,17 +63,13 @@ const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores'
 console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
 console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
 
-app.get('/', (req, res) => {
-  res.send('Server is running');
-});
-
 app.post('/proxy/submit-score', [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
     .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
     .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
-    .customSanitizer(value => sanitize(value)), //Sanitized to prevent NoSQL injection
+    .customSanitizer(value => sanitize(value)),
   body('score')
     .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
   body('mode')
@@ -97,7 +82,7 @@ app.post('/proxy/submit-score', [
   }
 
   try {
-    const response = await fetch(`http://localhost:3000${process.env.SCORE_SUBMIT_ENDPOINT}`, {
+    const response = await fetch(`${SCORE_SUBMIT_ENDPOINT}`, { 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -115,7 +100,7 @@ app.post('/proxy/submit-score', [
 
 app.get('/proxy/fetch-scores', async (req, res) => {
   try {
-    const response = await fetch(`http://localhost:3000${process.env.SCORE_FETCH_ENDPOINT}`, {
+    const response = await fetch(`${SCORE_FETCH_ENDPOINT}`, { 
       headers: {
         'x-api-key': process.env.API_KEY
       }
@@ -134,7 +119,7 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
     .trim()
     .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
     .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
-    .customSanitizer(value => sanitize(value)), //Sanitized to prevent NoSQL injection
+    .customSanitizer(value => sanitize(value)),
   body('score')
     .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
   body('mode')
