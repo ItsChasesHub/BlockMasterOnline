@@ -6,32 +6,27 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const sanitize = require('mongo-sanitize');
 
-require('dotenv').config(); // Loads the env vars from .env locally, but ignored on Render
+require('dotenv').config();
 
 const app = express();
 
-// Serve static files from the client directory
 app.use(express.static(path.join(__dirname, '../client')));
 
-// Serve blockmaster.html as the default route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
-// Handle favicon.ico requests to avoid 404 errors
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Middleware
-app.use(cors()); // Optional: Remove if frontend and backend are on the same domain
+app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per IP
+  windowMs: 15 * 60 * 1000, //15 minutes
+  max: 100, //100 requests per IP
   message: 'Too many requests from this IP, please try again after 15 minutes.'
 }));
 
-// Log environment variables for debugging
 console.log('Environment variables loaded:');
 console.log('MONGO_URI:', process.env.MONGO_URI ? process.env.MONGO_URI : 'Not set');
 console.log('SCORE_SUBMIT_ENDPOINT:', process.env.SCORE_SUBMIT_ENDPOINT);
@@ -40,7 +35,6 @@ console.log('MONGO_COLLECTION_NAME:', process.env.MONGO_COLLECTION_NAME);
 console.log('PORT:', process.env.PORT);
 console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
 
-// Validate required environment variables
 if (!process.env.MONGO_URI) {
   throw new Error('MONGO_URI is not defined. Please set it in Render environment variables.');
 }
@@ -51,13 +45,10 @@ if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
 
-// Define PORT before using it
 const PORT = process.env.PORT || 3000;
 
-// Construct the base URL for fetch calls
 const BASE_URL = `http://localhost:${PORT}`;
 
-// Authentication middleware
 const authenticate = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
   if (!apiKey || apiKey !== process.env.API_KEY) {
@@ -66,16 +57,15 @@ const authenticate = (req, res, next) => {
   next();
 };
 
-// Connect to MongoDB Atlas with better options
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-  connectTimeoutMS: 10000, // Timeout connection after 10 seconds
-  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  serverSelectionTimeoutMS: 5000, //Timeout after 5 seconds
+  connectTimeoutMS: 10000, //Timeout connection after 10 seconds
+  socketTimeoutMS: 45000, //Close sockets after 45 seconds of inactivity
 })
   .then(() => console.log('MongoDB Atlas connected successfully'))
   .catch(err => {
     console.error('MongoDB Atlas connection error:', err);
-    process.exit(1); // Exit the process if MongoDB fails to connect
+    process.exit(1);
   });
 
 const Score = require('./models/Score');
@@ -86,7 +76,6 @@ const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores'
 console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
 console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
 
-// Proxy endpoint for submitting scores
 app.post('/proxy/submit-score', [
   body('name')
     .isString().withMessage('Name must be a string')
@@ -125,7 +114,6 @@ app.post('/proxy/submit-score', [
   }
 });
 
-// Proxy endpoint for fetching scores
 app.get('/proxy/fetch-scores', async (req, res) => {
   try {
     const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
@@ -144,7 +132,6 @@ app.get('/proxy/fetch-scores', async (req, res) => {
   }
 });
 
-// Authenticated endpoint to submit scores
 app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   body('name')
     .isString().withMessage('Name must be a string')
@@ -181,7 +168,6 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   }
 });
 
-// Authenticated endpoint to fetch scores
 app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
   console.log('GET request received at:', SCORE_FETCH_ENDPOINT);
   try {
