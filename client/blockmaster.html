@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Block Master</title>
+    <link rel="stylesheet" href="blockmaster.css">
+  </head>
+  <body>
+    <div class="game-container">
+      <div class="sidebar">
+        <div class="title">Block Master</div>
+        <div id="score">SCORE<br />00000000</div>
+        <div id="timer">TIME<br />00:00</div>
+        <button class="button" id="newGameBtn">NEW GAME</button>
+        <button class="button" id="simpleBtn">SIMPLE</button>
+        <button class="button" id="timedBtn">TIMED</button>
+        <button class="button" id="explosionsBtn">EXPLOSIONS</button>
+        <div class="upgrade-circle">UPGRADE</div>
+        <div id="bonusMultiplier">Multiplier: x1</div>
+        <button class="button" id="endGameBtn">END</button>
+      </div>
+      <canvas id="gameCanvas" width="600" height="600"></canvas>
+      <div class="leaderboard">
+        <div class="leaderboard-title">Leaderboard</div>
+        <div class="leaderboard-section">
+          <h3>Simple</h3>
+          <div id="simple-leaderboard"></div>
+        </div>
+        <div class="leaderboard-section">
+          <h3>Timed</h3>
+          <div id="timed-leaderboard"></div>
+        </div>
+        <div class="leaderboard-section">
+          <h3>Explosions</h3>
+          <div id="explosions-leaderboard"></div>
+        </div>
+      </div>
+    </div>
+    <script src="blockmaster.js"></script>
+  </body>
+</html>

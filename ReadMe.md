@@ -1,0 +1,1 @@
+Block Master is inspired from Bejeweled but features more game modes, leaderboards, and more!
