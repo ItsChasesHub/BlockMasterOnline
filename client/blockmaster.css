@@ -89,6 +89,7 @@ body {
     border: none;
     border-radius: 5px;
     font-size: 13px;
+    font-weight: bolder;
     cursor: pointer;
     width: 100%;
     text-align: center;
@@ -198,6 +199,7 @@ canvas {
     align-items: center;
     flex-direction: column;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    font-weight: bold;
 }
 
 .info-item {
