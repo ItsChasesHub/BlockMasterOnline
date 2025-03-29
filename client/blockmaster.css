@@ -17,7 +17,7 @@ body {
     align-items: center;
     /* width: 100%; 
     max-width: 980px; */
-    margin: 0 auto;
+    margin: 0 170px; /* Adjusted to account for ad width */
     padding: 8px 0;
 }
 
@@ -266,4 +266,38 @@ canvas {
 
 .fab {
     font-size: 20px;
+}
+
+.ad-left, .ad-right {
+    position: fixed; 
+    top: 0; 
+    bottom: 0; 
+    width: 350px;
+    background-color: #2a2a2a; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.ad-left {
+    left: 0; 
+}
+
+.ad-right {
+    right: 0; 
+}
+
+.ad-container {
+    text-align: center;
+}
+
+@media (max-width: 1300px) {
+    .ad-left, .ad-right {
+        display: none; 
+    }
+    .game-wrapper {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
