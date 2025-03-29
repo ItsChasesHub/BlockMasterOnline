@@ -252,6 +252,15 @@ class GemGame {
             }
         }
 
+        if (this.lastMatchTime) {
+            const currentTime = Date.now();
+            if (currentTime - this.lastMatchTime > 5000 && this.bonusMultiplier > 1) {
+                console.log("Multiplier reset to 1x due to time elapsed.");
+                this.bonusMultiplier = 1;
+                this.updateBonusDisplay();
+            }
+        }
+
         requestAnimationFrame(() => this.animate());
     }
 
@@ -387,11 +396,9 @@ class GemGame {
 
     removeMatches(matches) {
         const currentTime = Date.now();
-        //Increments multiplier by 1 for consecutive matches within 5 seconds
+        //Increment multiplier by 1 for consecutive matches within 5 seconds
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) {
-            this.bonusMultiplier += 1; //Increments by 1 instead of multiplying by 1.75
-        } else {
-            this.bonusMultiplier = 1; //Resets to 1 if not within 5 seconds
+            this.bonusMultiplier += 1; //Increment by 1
         }
         this.lastMatchTime = currentTime;
 
@@ -681,7 +688,7 @@ class GemGame {
             if (playerName && playerName.trim().toLowerCase() === 'discard') {
                 console.log("User chose to discard the game.");
                 this.discardGame();
-                return;
+                return; 
             }
 
             if (playerName === null || playerName.trim() === "") {
