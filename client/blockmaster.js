@@ -20,6 +20,12 @@ class GemGame {
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
+        this.selectedTile = null;
+        this.dragStartX = null; 
+        this.dragStartY = null;
+        this.dragOffsetX = 0; 
+        this.dragOffsetY = 0;
+        this.isDragging = false;
 
         this.gemColors = [
             "#8B0000", //Dark Red
@@ -73,6 +79,16 @@ class GemGame {
             console.error("explosionsBtn not found!");
         }
 
+        const slidersBtn = document.getElementById("slidersBtn");
+        if (slidersBtn) {
+            slidersBtn.addEventListener("click", () => {
+                this.setMode("SLIDERS");
+                this.highlightButton("slidersBtn");
+            });
+        } else {
+            console.error("slidersBtn not found!");
+        }
+
         const endGameBtn = document.getElementById("endGameBtn");
         if (endGameBtn) {
             endGameBtn.addEventListener("click", () => this.endGameWithName());
@@ -87,7 +103,15 @@ class GemGame {
             console.error("discardGameBtn not found!");
         }
 
+        this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
+        this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
+        this.canvas.addEventListener("mouseup", this.handleMouseUp.bind(this));
         this.canvas.addEventListener("click", this.handleClick.bind(this));
+
+        this.canvas.addEventListener("touchstart", this.handleTouchStart.bind(this));
+        this.canvas.addEventListener("touchmove", this.handleTouchMove.bind(this));
+        this.canvas.addEventListener("touchend", this.handleTouchEnd.bind(this));
+
         this.updateScoreDisplay();
         this.updateTimerDisplay();
         this.updateBonusDisplay();
@@ -101,7 +125,7 @@ class GemGame {
 
     highlightButton(buttonId) {
         console.log("Highlighting button:", buttonId);
-        const buttons = ["simpleBtn", "timedBtn", "explosionsBtn"];
+        const buttons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
         buttons.forEach(id => {
             const btn = document.getElementById(id);
             if (btn) {
@@ -178,16 +202,15 @@ class GemGame {
         };
     }
 
-    drawGem(x, y, gem) {
-        const size = this.tileSize - 6;
-        const centerX = x * this.tileSize + this.tileSize / 2;
-        const centerY = y * this.tileSize + this.tileSize / 2 + gem.offsetY;
+    drawGem(x, y, gem, offsetX = 0, offsetY = 0) {
+        const centerX = x * this.tileSize + this.tileSize / 2 + offsetX;
+        const centerY = y * this.tileSize + this.tileSize / 2 + gem.offsetY + offsetY;
 
         const gradient = this.ctx.createLinearGradient(
-            x * this.tileSize,
-            y * this.tileSize,
-            x * this.tileSize + this.tileSize,
-            y * this.tileSize + this.tileSize
+            x * this.tileSize + offsetX,
+            y * this.tileSize + offsetY,
+            x * this.tileSize + this.tileSize + offsetX,
+            y * this.tileSize + this.tileSize + offsetY
         );
         gradient.addColorStop(0, gem.style.highlight);
         gradient.addColorStop(0.5, gem.style.base);
@@ -196,8 +219,8 @@ class GemGame {
         this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
         this.ctx.roundRect(
-            x * this.tileSize + 2,
-            y * this.tileSize + 2 + gem.offsetY,
+            x * this.tileSize + 2 + offsetX,
+            y * this.tileSize + 2 + gem.offsetY + offsetY,
             this.tileSize - 6,
             this.tileSize - 6,
             10
@@ -212,12 +235,12 @@ class GemGame {
             this.ctx.fillText("✹", centerX, centerY);
         }
 
-        if (
-            this.selectedGem &&
-            this.selectedGem.x === x &&
-            this.selectedGem.y === y
-        ) {
+        if (this.gameMode !== "SLIDERS" && this.selectedGem && this.selectedGem.x === x && this.selectedGem.y === y) {
             this.ctx.strokeStyle = "rgba(255,255,255,0.7)";
+            this.ctx.lineWidth = 4;
+            this.ctx.stroke();
+        } else if (this.gameMode === "SLIDERS" && this.selectedTile && this.selectedTile.x === x && this.selectedTile.y === y && !this.isDragging) {
+            this.ctx.strokeStyle = "rgba(255,255,0,0.7)";
             this.ctx.lineWidth = 4;
             this.ctx.stroke();
         }
@@ -235,21 +258,33 @@ class GemGame {
                 if (gem.offsetY !== gem.targetOffsetY) {
                     isAnimating = true;
                     gem.offsetY += (gem.targetOffsetY - gem.offsetY) * 0.3;
-                    if (Math.abs(gem.targetOffsetY - gem.offsetY) < 0.1) {
-                        gem.offsetY = gem.targetOffsetY;
-                    }
+                    if (Math.abs(gem.targetOffsetY - gem.offsetY) < 0.1) gem.offsetY = gem.targetOffsetY;
                 }
 
-                this.drawGem(x, y, gem);
+                if (this.gameMode === "SLIDERS" && this.isDragging && this.selectedTile) {
+                    if (x === this.selectedTile.x && Math.abs(this.dragOffsetY) > Math.abs(this.dragOffsetX)) {
+                        let offsetY = this.dragOffsetY;
+                        if (offsetY > this.tileSize) offsetY = this.tileSize;
+                        if (offsetY < -this.tileSize) offsetY = -this.tileSize;
+                        this.drawGem(x, y, gem, 0, offsetY);
+                    } else if (y === this.selectedTile.y && Math.abs(this.dragOffsetX) > Math.abs(this.dragOffsetY)) {
+                        let offsetX = this.dragOffsetX;
+                        if (offsetX > this.tileSize) offsetX = this.tileSize;
+                        if (offsetX < -this.tileSize) offsetX = -this.tileSize;
+                        this.drawGem(x, y, gem, offsetX, 0);
+                    } else {
+                        this.drawGem(x, y, gem);
+                    }
+                } else {
+                    this.drawGem(x, y, gem);
+                }
             }
         }
 
         if (!isAnimating && !this.isAnimating) {
             this.fillEmptySpaces();
             const matches = this.findMatches();
-            if (matches.length > 0) {
-                this.removeMatches(matches);
-            }
+            if (matches.length > 0) this.removeMatches(matches);
         }
 
         if (this.lastMatchTime) {
@@ -300,8 +335,162 @@ class GemGame {
         }
     }
 
-    handleClick(event) {
+    handleMouseDown(event) {
         if (this.isAnimating || (this.gameMode === "TIMED" && this.timeLeft <= 0)) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        const x = Math.floor((mouseX * scaleX) / this.tileSize);
+        const y = Math.floor((mouseY * scaleY) / this.tileSize);
+
+        if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return;
+
+        if (this.gameMode === "SLIDERS") {
+            this.selectedTile = { x, y };
+            this.dragStartX = mouseX * scaleX;
+            this.dragStartY = mouseY * scaleY;
+            this.dragOffsetX = 0;
+            this.dragOffsetY = 0;
+            this.isDragging = true;
+            event.preventDefault();
+            event.stopPropagation();
+        } else if (!this.selectedGem) {
+            this.selectedGem = { x, y };
+        }
+    }
+
+    handleMouseMove(event) {
+        if (!this.isDragging || this.gameMode !== "SLIDERS" || !this.selectedTile) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        this.dragOffsetX = (mouseX * scaleX) - this.dragStartX;
+        this.dragOffsetY = (mouseY * scaleY) - this.dragStartY;
+    }
+
+    handleMouseUp(event) {
+        if (!this.isDragging || this.gameMode !== "SLIDERS" || !this.selectedTile) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        const dx = (mouseX * scaleX) - this.dragStartX;
+        const dy = (mouseY * scaleY) - this.dragStartY;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx > this.tileSize / 2) this.slideRowRight(this.selectedTile.y);
+            else if (dx < -this.tileSize / 2) this.slideRowLeft(this.selectedTile.y);
+        } else {
+            if (dy > this.tileSize / 2) this.slideColumnDown(this.selectedTile.x);
+            else if (dy < -this.tileSize / 2) this.slideColumnUp(this.selectedTile.x);
+        }
+
+        this.isDragging = false;
+        this.dragOffsetX = 0;
+        this.dragOffsetY = 0;
+        this.selectedTile = null;
+
+        this.isAnimating = true;
+        this.fillEmptySpaces();
+        const matches = this.findMatches();
+        if (matches.length > 0) this.removeMatches(matches);
+        setTimeout(() => this.isAnimating = false, 300);
+    }
+
+    handleTouchStart(event) {
+        if (this.isAnimating || (this.gameMode === "TIMED" && this.timeLeft <= 0)) return;
+
+        const touch = event.touches[0];
+        const rect = this.canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        const x = Math.floor((touchX * scaleX) / this.tileSize);
+        const y = Math.floor((touchY * scaleY) / this.tileSize);
+
+        if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return;
+
+        if (this.gameMode === "SLIDERS") {
+            this.selectedTile = { x, y };
+            this.dragStartX = touchX * scaleX;
+            this.dragStartY = touchY * scaleY;
+            this.dragOffsetX = 0;
+            this.dragOffsetY = 0;
+            this.isDragging = true;
+            event.preventDefault();
+        } else if (!this.selectedGem) {
+            this.selectedGem = { x, y };
+        }
+    }
+
+    handleTouchMove(event) {
+        if (!this.isDragging || this.gameMode !== "SLIDERS" || !this.selectedTile) return;
+
+        const touch = event.touches[0];
+        const rect = this.canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        this.dragOffsetX = (touchX * scaleX) - this.dragStartX;
+        this.dragOffsetY = (touchY * scaleY) - this.dragStartY;
+        event.preventDefault();
+    }
+
+    handleTouchEnd(event) {
+        if (!this.isDragging || this.gameMode !== "SLIDERS" || !this.selectedTile) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const touchX = event.changedTouches[0].clientX - rect.left;
+        const touchY = event.changedTouches[0].clientY - rect.top;
+
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        const dx = (touchX * scaleX) - this.dragStartX;
+        const dy = (touchY * scaleY) - this.dragStartY;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx > this.tileSize / 2) this.slideRowRight(this.selectedTile.y);
+            else if (dx < -this.tileSize / 2) this.slideRowLeft(this.selectedTile.y);
+        } else {
+            if (dy > this.tileSize / 2) this.slideColumnDown(this.selectedTile.x);
+            else if (dy < -this.tileSize / 2) this.slideColumnUp(this.selectedTile.x);
+        }
+
+        this.isDragging = false;
+        this.dragOffsetX = 0;
+        this.dragOffsetY = 0;
+        this.selectedTile = null;
+
+        this.isAnimating = true;
+        this.fillEmptySpaces();
+        const matches = this.findMatches();
+        if (matches.length > 0) this.removeMatches(matches);
+        setTimeout(() => this.isAnimating = false, 300);
+    }
+
+    handleClick(event) {
+        if (this.isAnimating || (this.gameMode === "TIMED" && this.timeLeft <= 0) || this.gameMode === "SLIDERS") return;
 
         const rect = this.canvas.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
@@ -340,6 +529,46 @@ class GemGame {
             }
             this.selectedGem = null;
         }
+    }
+
+    slideRowLeft(row) {
+        const temp = this.grid[0][row];
+        for (let x = 0; x < this.gridSize - 1; x++) {
+            this.grid[x][row] = this.grid[x + 1][row];
+            this.grid[x][row].offsetY = 0;
+        }
+        this.grid[this.gridSize - 1][row] = temp;
+        this.grid[this.gridSize - 1][row].offsetY = 0;
+    }
+
+    slideRowRight(row) {
+        const temp = this.grid[this.gridSize - 1][row];
+        for (let x = this.gridSize - 1; x > 0; x--) {
+            this.grid[x][row] = this.grid[x - 1][row];
+            this.grid[x][row].offsetY = 0;
+        }
+        this.grid[0][row] = temp;
+        this.grid[0][row].offsetY = 0;
+    }
+
+    slideColumnUp(col) {
+        const temp = this.grid[col][0];
+        for (let y = 0; y < this.gridSize - 1; y++) {
+            this.grid[col][y] = this.grid[col][y + 1];
+            this.grid[col][y].offsetY = 0;
+        }
+        this.grid[col][this.gridSize - 1] = temp;
+        this.grid[col][this.gridSize - 1].offsetY = 0;
+    }
+
+    slideColumnDown(col) {
+        const temp = this.grid[col][this.gridSize - 1];
+        for (let y = this.gridSize - 1; y > 0; y--) {
+            this.grid[col][y] = this.grid[col][y - 1];
+            this.grid[col][y].offsetY = 0;
+        }
+        this.grid[col][0] = temp;
+        this.grid[col][0].offsetY = 0;
     }
 
     isAdjacent(gem1, gem2) {
@@ -396,9 +625,8 @@ class GemGame {
 
     removeMatches(matches) {
         const currentTime = Date.now();
-        //Increment multiplier by 1 for consecutive matches within 5 seconds
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) {
-            this.bonusMultiplier += 1; //Increment by 1
+            this.bonusMultiplier += 1;
         }
         this.lastMatchTime = currentTime;
 
@@ -466,9 +694,7 @@ class GemGame {
             const minutes = Math.floor(this.timeLeft / 60);
             const seconds = Math.floor(this.timeLeft % 60);
             timerElement.innerHTML = `TIME<br>${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-            if (this.timeLeft <= 0 && this.gameMode === "TIMED") {
-                this.endGame();
-            }
+            if (this.timeLeft <= 0 && this.gameMode === "TIMED") this.endGame();
         } else {
             console.error("Timer element not found!");
         }
@@ -496,7 +722,7 @@ class GemGame {
             console.log("Leaderboard fetched successfully:", scores);
         } catch (err) {
             console.error('Error fetching leaderboard:', err.message);
-            this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [] });
+            this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [], sliders: [] });
             alert('Failed to fetch leaderboard. Please try again later.');
         }
     }
@@ -576,6 +802,7 @@ class GemGame {
         const simpleScores = scores.simple || [];
         const timedScores = scores.timed || [];
         const explosionsScores = scores.explosions || [];
+        const slidersScores = scores.sliders || [];
 
         const simpleList = document.getElementById("simple-leaderboard");
         if (simpleList) {
@@ -615,6 +842,19 @@ class GemGame {
         } else {
             console.error("Explosions leaderboard element not found!");
         }
+
+        const slidersList = document.getElementById("sliders-leaderboard");
+        if (slidersList) {
+            slidersList.innerHTML = "";
+            slidersScores.forEach((entry, index) => {
+                const entryDiv = document.createElement("div");
+                entryDiv.className = "leaderboard-entry";
+                entryDiv.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score}</span>`;
+                slidersList.appendChild(entryDiv);
+            });
+        } else {
+            console.error("Sliders leaderboard element not found!");
+        }
     }
 
     startTimer() {
@@ -642,6 +882,10 @@ class GemGame {
         this.score = 0;
         this.grid = this.createGrid();
         this.selectedGem = null;
+        this.selectedTile = null;
+        this.isDragging = false;
+        this.dragOffsetX = 0;
+        this.dragOffsetY = 0;
         this.isAnimating = false;
         this.timeLeft = 300;
         this.bonusMultiplier = 1;
@@ -688,7 +932,7 @@ class GemGame {
             if (playerName && playerName.trim().toLowerCase() === 'discard') {
                 console.log("User chose to discard the game.");
                 this.discardGame();
-                return; 
+                return;
             }
 
             if (playerName === null || playerName.trim() === "") {

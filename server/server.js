@@ -24,8 +24,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, //15 minutes
-  max: 100, //100 requests per IP
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per IP
   message: 'Too many requests from this IP, please try again after 15 minutes.'
 }));
 
@@ -59,9 +59,9 @@ const authenticate = (req, res, next) => {
 };
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000, //Timeout after 5 seconds
-  connectTimeoutMS: 10000, //Timeout connection after 10 seconds
-  socketTimeoutMS: 45000, //Close sockets after 45 seconds of inactivity
+  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+  connectTimeoutMS: 10000, // Timeout connection after 10 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
 })
   .then(() => console.log('MongoDB Atlas connected successfully'))
   .catch(err => {
@@ -87,7 +87,7 @@ app.post('/proxy/submit-score', [
   body('score')
     .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
   body('mode')
-    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS']).withMessage('Mode must be SIMPLE, TIMED, or EXPLOSIONS'),
+    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -143,7 +143,7 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   body('score')
     .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
   body('mode')
-    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS']).withMessage('Mode must be SIMPLE, TIMED, or EXPLOSIONS'),
+    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
   console.log('POST request received at:', SCORE_SUBMIT_ENDPOINT);
   console.log('Request body:', req.body);
@@ -184,12 +184,17 @@ app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
       .sort({ score: -1 })
       .limit(5)
       .select('-__v');
+    const slidersScores = await Score.find({ mode: 'SLIDERS' })
+      .sort({ score: -1 })
+      .limit(5)
+      .select('-__v');
 
-    console.log('Fetched scores:', { simple: simpleScores, timed: timedScores, explosions: explosionsScores });
+    console.log('Fetched scores:', { simple: simpleScores, timed: timedScores, explosions: explosionsScores, sliders: slidersScores });
     res.json({
       simple: simpleScores,
       timed: timedScores,
       explosions: explosionsScores,
+      sliders: slidersScores
     });
   } catch (err) {
     console.error('Error fetching scores:', err);
