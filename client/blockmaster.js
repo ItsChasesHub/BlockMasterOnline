@@ -16,18 +16,18 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; //5 minutes for TIMED mode
+        this.timeLeft = 300; // 5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
 
         this.gemColors = [
-            "#8B0000", //Dark Red
-            "#006400", //Dark Green
-            "#00008B", //Dark Blue
-            "#DAA520", //Goldenrod
-            "#4B0082", //Indigo
-            "#8B4513", //Saddle Brown
+            "#8B0000", // Dark Red
+            "#006400", // Dark Green
+            "#00008B", // Dark Blue
+            "#DAA520", // Goldenrod
+            "#4B0082", // Indigo
+            "#8B4513", // Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
@@ -387,10 +387,11 @@ class GemGame {
 
     removeMatches(matches) {
         const currentTime = Date.now();
+        // Increment multiplier by 1 for consecutive matches within 5 seconds
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) {
-            this.bonusMultiplier *= 1.75;
+            this.bonusMultiplier += 1; // Increment by 1 instead of multiplying by 1.75
         } else {
-            this.bonusMultiplier = 1;
+            this.bonusMultiplier = 1; // Reset to 1 if not within 5 seconds
         }
         this.lastMatchTime = currentTime;
 
@@ -470,7 +471,7 @@ class GemGame {
         const bonusElement = document.getElementById("bonusMultiplier");
         if (bonusElement) {
             let displayMultiplier = Math.round(this.bonusMultiplier);
-            if (displayMultiplier > 99) displayMultiplier = 99;
+            // Removed the cap at 99x, allowing the multiplier to grow indefinitely
             bonusElement.innerHTML = `Multiplier: x${displayMultiplier}`;
         } else {
             console.error("Bonus multiplier element not found!");
@@ -669,8 +670,21 @@ class GemGame {
         this.stopTimer();
 
         if (this.score > 0) {
-            let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
+            let playerName = prompt(
+                "Game Over! Your score: " + Math.round(this.score) + "\n" +
+                "Enter your name for the leaderboard:\n" +
+                "- Click OK to submit with your name\n" +
+                "- Click Cancel to submit as Anonymous\n" +
+                "- Type 'Discard' and click OK to discard your score"
+            );
             console.log("Player entered name:", playerName);
+
+            if (playerName && playerName.trim().toLowerCase() === 'discard') {
+                console.log("User chose to discard the game.");
+                this.discardGame();
+                return;
+            }
+
             if (playerName === null || playerName.trim() === "") {
                 playerName = "Anonymous";
                 console.log("Name was null or empty, set to 'Anonymous'");
@@ -693,8 +707,21 @@ class GemGame {
         this.stopTimer();
 
         if (this.score > 0) {
-            let playerName = prompt("Game Over! Your score: " + Math.round(this.score) + "\nEnter your name for the leaderboard:");
+            let playerName = prompt(
+                "Game Over! Your score: " + Math.round(this.score) + "\n" +
+                "Enter your name for the leaderboard:\n" +
+                "- Click OK to submit with your name\n" +
+                "- Click Cancel to submit as Anonymous\n" +
+                "- Type 'Discard' and click OK to discard your score"
+            );
             console.log("Player entered name:", playerName);
+
+            if (playerName && playerName.trim().toLowerCase() === 'discard') {
+                console.log("User chose to discard the game.");
+                this.discardGame();
+                return;
+            }
+
             if (playerName === null || playerName.trim() === "") {
                 playerName = "Anonymous";
                 console.log("Name was null or empty, set to 'Anonymous'");
