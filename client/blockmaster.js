@@ -325,10 +325,8 @@ class GemGame {
 
         if (this.gameMode === "SLIDERS") {
             if (!this.selectedTile) {
-                // First click: select the tile
                 this.selectedTile = { x, y };
             } else {
-                // Second click: determine slide direction if adjacent
                 if (this.isAdjacent(this.selectedTile, { x, y })) {
                     const dx = x - this.selectedTile.x;
                     const dy = y - this.selectedTile.y;
@@ -338,7 +336,6 @@ class GemGame {
                     else if (dy === 1) this.slideColumnDown(this.selectedTile.x);
                     else if (dy === -1) this.slideColumnUp(this.selectedTile.x);
 
-                    // Animate and check matches
                     this.isAnimating = true;
                     this.fillEmptySpaces();
                     const matches = this.findMatches();
@@ -350,7 +347,7 @@ class GemGame {
                 this.selectedTile = null;
             }
         } else {
-            // SIMPLE, TIMED, EXPLOSIONS modes: click-to-swap logic
+            //SIMPLE, TIMED, EXPLOSIONS modes: click-to-swap logic
             if (!this.selectedGem) {
                 this.selectedGem = { x, y };
             } else {
