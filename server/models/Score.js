@@ -8,7 +8,7 @@ const ScoreSchema = new mongoose.Schema({
         maxlength: 32,
         validate: {
             validator: function(value) {
-                //Ensuring that a name is a string and contains only allowed characters (alphanumeric, hyphens, underscores)
+                /* Ensures that a name is a string and contains only allowed characters (alphanumeric, hyphens, underscores) for SQL Injection Preventions */
                 return typeof value === 'string' && /^[a-zA-Z0-9_-]+$/.test(value);
             },
             message: 'Name must be a string containing only alphanumeric characters, hyphens, and underscores'

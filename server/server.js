@@ -24,8 +24,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per IP
+  windowMs: 15 * 60 * 1000, /* 15 minutes */
+  max: 100, /* 100 requests per IP */
   message: 'Too many requests from this IP, please try again after 15 minutes.'
 }));
 
@@ -59,9 +59,9 @@ const authenticate = (req, res, next) => {
 };
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000, //Timeout after 5 seconds
-  connectTimeoutMS: 10000, //Timeout connection after 10 seconds
-  socketTimeoutMS: 45000, //Close sockets after 45 seconds of inactivity
+  serverSelectionTimeoutMS: 5000, /* Timeout after 5 seconds */
+  connectTimeoutMS: 10000, /* Timeout connection after 10 seconds */
+  socketTimeoutMS: 45000, /* Close sockets after 45 seconds of inactivity */
 })
   .then(() => console.log('MongoDB Atlas connected successfully'))
   .catch(err => {

@@ -16,21 +16,21 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; //5 minutes for TIMED mode
+        this.timeLeft = 300; /* 5 minutes for TIMED mode */
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
-        this.selectedTile = null; //For SLIDERS mode to track the selected tile
-        this.selectedGem = null; //For SIMPLE, TIMED, EXPLOSIONS modes to track the selected gem
+        this.selectedTile = null; /* For SLIDERS mode to track the selected tile */
+        this.selectedGem = null; /* For SIMPLE, TIMED, EXPLOSIONS modes to track the selected gem */
         this.isAnimating = false;
 
         this.gemColors = [
-            "#8B0000", //Dark Red
-            "#006400", //Dark Green
-            "#00008B", //Dark Blue
-            "#DAA520", //Goldenrod
-            "#4B0082", //Indigo
-            "#8B4513", //Saddle Brown
+            "#8B0000", /* Dark Red */
+            "#006400", /* Dark Green */
+            "#00008B", /* Dark Blue */
+            "#DAA520", /* Goldenrod */ 
+            "#4B0082", /* Indigo */
+            "#8B4513", /* Saddle Brown */
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
@@ -347,7 +347,6 @@ class GemGame {
                 this.selectedTile = null;
             }
         } else {
-            //SIMPLE, TIMED, EXPLOSIONS modes: click-to-swap logic
             if (!this.selectedGem) {
                 this.selectedGem = { x, y };
             } else {
@@ -578,7 +577,6 @@ class GemGame {
         const trimmedName = name.trim();
         const lowerName = trimmedName.toLowerCase();
 
-        //Checks length
         if (trimmedName.length < 1 || trimmedName.length > 32) {
             return {
                 valid: false,
@@ -586,7 +584,6 @@ class GemGame {
             };
         }
 
-        //Checks for spaces
         if (/\s/.test(trimmedName)) {
             return {
                 valid: false,
@@ -594,7 +591,6 @@ class GemGame {
             };
         }
 
-        //Checks for allowed characters (alphanumeric, hyphens, underscores)
         if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
             return {
                 valid: false,
@@ -602,7 +598,6 @@ class GemGame {
             };
         }
 
-        // Check for banned words (same as filterName)
         const bannedPatterns = [
             /\bn[i1][g6]{1,2}[e3][r]/i,
             /\bf[a@][g6]{1,2}[o0][t]/i,
