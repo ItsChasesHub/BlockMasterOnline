@@ -99,6 +99,7 @@ canvas {
 }
 
 .upgrade-circle {
+    font-weight: bold;
     width: 100px;
     height: 100px;
     background: radial-gradient(circle, #000, #333);
