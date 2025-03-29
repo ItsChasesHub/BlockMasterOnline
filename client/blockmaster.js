@@ -16,21 +16,21 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; // 5 minutes for TIMED mode
+        this.timeLeft = 300; //5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
-        this.selectedTile = null; // For SLIDERS mode to track the selected tile
-        this.selectedGem = null; // For SIMPLE, TIMED, EXPLOSIONS modes to track the selected gem
+        this.selectedTile = null; //For SLIDERS mode to track the selected tile
+        this.selectedGem = null; //For SIMPLE, TIMED, EXPLOSIONS modes to track the selected gem
         this.isAnimating = false;
 
         this.gemColors = [
-            "#8B0000", // Dark Red
-            "#006400", // Dark Green
-            "#00008B", // Dark Blue
-            "#DAA520", // Goldenrod
-            "#4B0082", // Indigo
-            "#8B4513", // Saddle Brown
+            "#8B0000", //Dark Red
+            "#006400", //Dark Green
+            "#00008B", //Dark Blue
+            "#DAA520", //Goldenrod
+            "#4B0082", //Indigo
+            "#8B4513", //Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
@@ -38,7 +38,6 @@ class GemGame {
         this.grid = this.createGrid();
         this.isAnimating = false;
 
-        // Event listeners for buttons
         const newGameBtn = document.getElementById("newGameBtn");
         if (newGameBtn) {
             newGameBtn.addEventListener("click", () => this.startNewGame());
@@ -100,7 +99,6 @@ class GemGame {
             console.error("discardGameBtn not found!");
         }
 
-        // Click event listener for all interactions (two-click system for all modes)
         this.canvas.addEventListener("click", this.handleClick.bind(this));
 
         this.updateScoreDisplay();
@@ -577,18 +575,37 @@ class GemGame {
         }
     }
 
-    filterName(name) {
-        console.log("Entering filterName with name:", name);
+    validateName(name) {
+        console.log("Validating name:", name);
 
         const trimmedName = name.trim();
         const lowerName = trimmedName.toLowerCase();
-        console.log("Trimmed and lowercased name:", lowerName);
 
+        //Checks length
         if (trimmedName.length < 1 || trimmedName.length > 32) {
-            console.log("Name rejected: Length out of bounds (1-32 characters)");
-            return false;
+            return {
+                valid: false,
+                message: "Name must be between 1 and 32 characters long."
+            };
         }
 
+        //Checks for spaces
+        if (/\s/.test(trimmedName)) {
+            return {
+                valid: false,
+                message: "Name cannot contain spaces."
+            };
+        }
+
+        //Checks for allowed characters (alphanumeric, hyphens, underscores)
+        if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
+            return {
+                valid: false,
+                message: "Name can only contain letters (a-z, A-Z), numbers (0-9), hyphens (-), and underscores (_)."
+            };
+        }
+
+        // Check for banned words (same as filterName)
         const bannedPatterns = [
             /\bn[i1][g6]{1,2}[e3][r]/i,
             /\bf[a@][g6]{1,2}[o0][t]/i,
@@ -604,33 +621,44 @@ class GemGame {
             /\bsl[uü][t]/i,
             /\bd[a@][m][n]/i,
             /\bb[a@][s$][t][a@][r][d]/i,
-            /\br[e3][t][a@][r][d]/i,
-            /[^\w\s-]/,
-            /\s{2,}/
+            /\br[e3][t][a@][r][d]/i
         ];
 
         for (let pattern of bannedPatterns) {
-            const matchesPattern = pattern.test(lowerName);
-            console.log(`Testing pattern ${pattern}: ${matchesPattern}`);
-            if (matchesPattern) {
-                console.log(`Name rejected: Matches pattern ${pattern}`);
-                return false;
+            if (pattern.test(lowerName)) {
+                return {
+                    valid: false,
+                    message: "Name contains inappropriate content."
+                };
             }
         }
 
-        console.log("Name accepted: No issues found");
-        return true;
+        return {
+            valid: true,
+            message: ""
+        };
+    }
+
+    async fetchLeaderboard() {
+        console.log("Fetching leaderboard...");
+        try {
+            const response = await fetch('/proxy/fetch-scores');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch leaderboard: ${response.status} ${response.statusText}`);
+            }
+            const scores = await response.json();
+            this.updateLeaderboardDisplay(scores);
+            console.log("Leaderboard fetched successfully:", scores);
+        } catch (err) {
+            console.error('Error fetching leaderboard:', err.message);
+            this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [], sliders: [] });
+            alert('Failed to fetch leaderboard. Please try again later.');
+        }
     }
 
     async submitScore(name, score, mode) {
         console.log("Entering submitScore with name:", name, "score:", score, "mode:", mode);
         try {
-            if (!this.filterName(name)) {
-                console.warn("Inappropriate name detected, using 'Anonymous'");
-                name = "Anonymous";
-            }
-            console.log("Submitting score with name:", name);
-
             const response = await fetch('/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -767,30 +795,44 @@ class GemGame {
         this.stopTimer();
 
         if (this.score > 0) {
-            let playerName = prompt(
-                "Game Over! Your score: " + Math.round(this.score) + "\n" +
-                "Enter your name for the leaderboard:\n" +
-                "- Click OK to submit with your name\n" +
-                "- Click Cancel to submit as Anonymous\n" +
-                "- Type 'Discard' and click OK to discard your score"
-            );
-            console.log("Player entered name:", playerName);
+            let playerName = null;
+            let isValidName = false;
+            let promptMessage = "Game Over! Your score: " + Math.round(this.score) + "\n" +
+                                "Enter your name for the leaderboard:\n" +
+                                "- Click OK to submit with your name\n" +
+                                "- Click Cancel to submit as Anonymous\n" +
+                                "- Type 'Discard' and click OK to discard your score";
 
-            if (playerName && playerName.trim().toLowerCase() === 'discard') {
-                console.log("User chose to discard the game.");
-                this.discardGame();
-                return;
-            }
+            while (!isValidName) {
+                playerName = prompt(promptMessage);
+                console.log("Player entered name:", playerName);
 
-            if (playerName === null || playerName.trim() === "") {
-                playerName = "Anonymous";
-                console.log("Name was null or empty, set to 'Anonymous'");
-            } else {
-                playerName = playerName.trim();
-                if (!this.filterName(playerName)) {
-                    console.log("Name failed filter, alerting user...");
-                    alert("That name is not allowed. Using 'Anonymous' instead.");
+                if (playerName && playerName.trim().toLowerCase() === 'discard') {
+                    console.log("User chose to discard the game.");
+                    this.discardGame();
+                    return;
+                }
+
+                if (playerName === null || playerName.trim() === "") {
                     playerName = "Anonymous";
+                    console.log("Name was null or empty, set to 'Anonymous'");
+                    isValidName = true;
+                } else {
+                    playerName = playerName.trim();
+                    const validation = this.validateName(playerName);
+                    if (validation.valid) {
+                        console.log("Name is valid:", playerName);
+                        isValidName = true;
+                    } else {
+                        console.log("Name validation failed:", validation.message);
+                        promptMessage = "Game Over! Your score: " + Math.round(this.score) + "\n" +
+                                        "Invalid name: " + validation.message + "\n" +
+                                        "Allowed: a-z, A-Z, 0-9, hyphens (-), underscores (_), no spaces, max 32 characters\n" +
+                                        "Enter your name for the leaderboard:\n" +
+                                        "- Click OK to submit with your name\n" +
+                                        "- Click Cancel to submit as Anonymous\n" +
+                                        "- Type 'Discard' and click OK to discard your score";
+                    }
                 }
             }
 
@@ -806,30 +848,44 @@ class GemGame {
         this.stopTimer();
 
         if (this.score > 0) {
-            let playerName = prompt(
-                "Game Over! Your score: " + Math.round(this.score) + "\n" +
-                "Enter your name for the leaderboard:\n" +
-                "- Click OK to submit with your name\n" +
-                "- Click Cancel to submit as Anonymous\n" +
-                "- Type 'Discard' and click OK to discard your score"
-            );
-            console.log("Player entered name:", playerName);
+            let playerName = null;
+            let isValidName = false;
+            let promptMessage = "Game Over! Your score: " + Math.round(this.score) + "\n" +
+                                "Enter your name for the leaderboard:\n" +
+                                "- Click OK to submit with your name\n" +
+                                "- Click Cancel to submit as Anonymous\n" +
+                                "- Type 'Discard' and click OK to discard your score";
 
-            if (playerName && playerName.trim().toLowerCase() === 'discard') {
-                console.log("User chose to discard the game.");
-                this.discardGame();
-                return;
-            }
+            while (!isValidName) {
+                playerName = prompt(promptMessage);
+                console.log("Player entered name:", playerName);
 
-            if (playerName === null || playerName.trim() === "") {
-                playerName = "Anonymous";
-                console.log("Name was null or empty, set to 'Anonymous'");
-            } else {
-                playerName = playerName.trim();
-                if (!this.filterName(playerName)) {
-                    console.log("Name failed filter, alerting user...");
-                    alert("That name is not allowed. Using 'Anonymous' instead.");
+                if (playerName && playerName.trim().toLowerCase() === 'discard') {
+                    console.log("User chose to discard the game.");
+                    this.discardGame();
+                    return;
+                }
+
+                if (playerName === null || playerName.trim() === "") {
                     playerName = "Anonymous";
+                    console.log("Name was null or empty, set to 'Anonymous'");
+                    isValidName = true;
+                } else {
+                    playerName = playerName.trim();
+                    const validation = this.validateName(playerName);
+                    if (validation.valid) {
+                        console.log("Name is valid:", playerName);
+                        isValidName = true;
+                    } else {
+                        console.log("Name validation failed:", validation.message);
+                        promptMessage = "Game Over! Your score: " + Math.round(this.score) + "\n" +
+                                        "Invalid name: " + validation.message + "\n" +
+                                        "Allowed: a-z, A-Z, 0-9, hyphens (-), underscores (_), no spaces, max 32 characters\n" +
+                                        "Enter your name for the leaderboard:\n" +
+                                        "- Click OK to submit with your name\n" +
+                                        "- Click Cancel to submit as Anonymous\n" +
+                                        "- Type 'Discard' and click OK to discard your score";
+                    }
                 }
             }
 
