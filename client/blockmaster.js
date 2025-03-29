@@ -16,18 +16,18 @@ class GemGame {
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
         this.gameMode = "SIMPLE";
-        this.timeLeft = 300; // 5 minutes for TIMED mode
+        this.timeLeft = 300; //5 minutes for TIMED mode
         this.timerInterval = null;
         this.bonusMultiplier = 1;
         this.lastMatchTime = null;
 
         this.gemColors = [
-            "#8B0000", // Dark Red
-            "#006400", // Dark Green
-            "#00008B", // Dark Blue
-            "#DAA520", // Goldenrod
-            "#4B0082", // Indigo
-            "#8B4513", // Saddle Brown
+            "#8B0000", //Dark Red
+            "#006400", //Dark Green
+            "#00008B", //Dark Blue
+            "#DAA520", //Goldenrod
+            "#4B0082", //Indigo
+            "#8B4513", //Saddle Brown
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
@@ -387,11 +387,11 @@ class GemGame {
 
     removeMatches(matches) {
         const currentTime = Date.now();
-        // Increment multiplier by 1 for consecutive matches within 5 seconds
+        //Increments multiplier by 1 for consecutive matches within 5 seconds
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) {
-            this.bonusMultiplier += 1; // Increment by 1 instead of multiplying by 1.75
+            this.bonusMultiplier += 1; //Increments by 1 instead of multiplying by 1.75
         } else {
-            this.bonusMultiplier = 1; // Reset to 1 if not within 5 seconds
+            this.bonusMultiplier = 1; //Resets to 1 if not within 5 seconds
         }
         this.lastMatchTime = currentTime;
 
@@ -471,7 +471,6 @@ class GemGame {
         const bonusElement = document.getElementById("bonusMultiplier");
         if (bonusElement) {
             let displayMultiplier = Math.round(this.bonusMultiplier);
-            // Removed the cap at 99x, allowing the multiplier to grow indefinitely
             bonusElement.innerHTML = `Multiplier: x${displayMultiplier}`;
         } else {
             console.error("Bonus multiplier element not found!");
@@ -688,13 +687,15 @@ class GemGame {
             if (playerName === null || playerName.trim() === "") {
                 playerName = "Anonymous";
                 console.log("Name was null or empty, set to 'Anonymous'");
+            } else {
+                playerName = playerName.trim();
+                if (!this.filterName(playerName)) {
+                    console.log("Name failed filter, alerting user...");
+                    alert("That name is not allowed. Using 'Anonymous' instead.");
+                    playerName = "Anonymous";
+                }
             }
-            playerName = playerName.trim();
-            if (!this.filterName(playerName)) {
-                console.log("Name failed filter, alerting user...");
-                alert("That name is not allowed. Using 'Anonymous' instead.");
-                playerName = "Anonymous";
-            }
+
             this.submitScore(playerName, Math.round(this.score), this.gameMode);
         } else {
             console.log("Score is 0, skipping username prompt and submission.");
@@ -725,13 +726,15 @@ class GemGame {
             if (playerName === null || playerName.trim() === "") {
                 playerName = "Anonymous";
                 console.log("Name was null or empty, set to 'Anonymous'");
+            } else {
+                playerName = playerName.trim();
+                if (!this.filterName(playerName)) {
+                    console.log("Name failed filter, alerting user...");
+                    alert("That name is not allowed. Using 'Anonymous' instead.");
+                    playerName = "Anonymous";
+                }
             }
-            playerName = playerName.trim();
-            if (!this.filterName(playerName)) {
-                console.log("Name failed filter, alerting user...");
-                alert("That name is not allowed. Using 'Anonymous' instead.");
-                playerName = "Anonymous";
-            }
+
             this.submitScore(playerName, Math.round(this.score), this.gameMode);
         } else {
             console.log("Score is 0, skipping username prompt and submission.");
