@@ -1,13 +1,24 @@
 body {
     margin: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #000;
     font-family: Arial, sans-serif;
     color: white;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 10px 0;
 }
 
 .game-container {
@@ -17,6 +28,7 @@ body {
     border-radius: 15px;
     padding: 10px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    width: 960px;
 }
 
 .sidebar {
@@ -172,4 +184,83 @@ canvas {
     display: flex;
     justify-content: space-between;
     font-size: 14px;
+}
+
+.info-section {
+    width: 960px;
+    background-color: #2a2a2a;
+    border: 5px solid #37d4a7;
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.info-item {
+    margin: 10px 0;
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+}
+
+.info-item a,
+.bitcoin-address,
+.ethereum-address {
+    color: white;
+    text-decoration: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #818181;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    word-break: break-all;
+}
+
+.info-item a:hover,
+.bitcoin-address:hover,
+.ethereum-address:hover {
+    background-color: #37d4a7 !important;
+}
+
+.bitcoin-address.copied,
+.ethereum-address.copied {
+    background-color: #37d4a7 !important;
+}
+
+.info-item span {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #818181;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.address-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.copy-instruction {
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.fab {
+    font-size: 20px;
 }
