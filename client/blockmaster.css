@@ -14,10 +14,10 @@ body {
 .game-wrapper {
     display: flex;
     position: relative;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    align-items: flex-start;
     margin: 0 auto;
-    padding: 8px 8px 8px 8px;
+    padding: 8px;
 }
 
 .game-container {
@@ -35,24 +35,19 @@ body {
     padding: 20px;
     background-color: #333;
     border: 5px solid #37d4a7;
-    border-radius: 15px 15px 15px 15px;
-    position: absolute;
-    left: 0;
-    transform: translateX(-100%);
+    border-radius: 15px;
     margin-right: 10px;
-    align-self: stretch;
     overflow-y: auto;
 }
 
-/* Hide scrollbar but keep functionality */
 .game-legend::-webkit-scrollbar {
     width: 0 !important;
     background: transparent !important;
 }
 
 .game-legend {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .game-content {
@@ -155,7 +150,6 @@ body {
     cursor: pointer;
     width: 100%;
     text-align: center;
-    size: 10%;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -217,6 +211,7 @@ canvas {
     border-radius: 0 10px 10px 0;
     display: flex;
     flex-direction: column;
+    text-align: center;
 }
 
 .leaderboard-title {
@@ -235,8 +230,8 @@ canvas {
 .leaderboard-section h3 {
     font-size: 16px;
     margin: 0 0 5px 0;
-    text-align: center;
     color: #37d4a7;
+    text-align: center;
 }
 
 .leaderboard-entry {
@@ -262,6 +257,15 @@ canvas {
     flex-direction: column;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
     font-weight: bold;
+    margin: 10px auto;
+}
+
+.top-info {
+    margin-top: 0;
+}
+
+.bottom-info {
+    margin-bottom: 0;
 }
 
 .info-item {
@@ -347,37 +351,44 @@ canvas {
     transition: top 0.1s ease;
 }
 
-/* Mobile support */
 @media (max-width: 768px) {
-    /* Adjust body to ensure full responsiveness */
     body {
-        flex-direction: column;
         align-items: stretch;
-        overflow-x: hidden;
+        padding: 0;
     }
 
-    /* Game wrapper adjustments */
     .game-wrapper {
+        flex-direction: column;
         width: 100%;
         padding: 0;
         margin: 0;
     }
 
-    /* Game container adjustments */
     .game-container {
         width: 100%;
         border-radius: 0;
         padding: 5px;
-        margin: 0;
-    }
-
-    /* Game content adjustments */
-    .game-content {
         flex-direction: column;
         align-items: center;
     }
 
-    /* Sidebar adjustments */
+    .game-legend {
+        width: 100%;
+        max-width: 1090px;
+        height: auto;
+        margin: 10px auto;
+        padding: 15px;
+        background-color: #2a2a2a;
+        border: 5px solid #37d4a7;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .game-content {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
     .sidebar {
         width: 100%;
         border-radius: 0;
@@ -388,58 +399,72 @@ canvas {
         gap: 10px;
     }
 
-    .sidebar .button,
+    .sidebar .title {
+        width: 100%;
+        text-align: center;
+        font-size: 18px;
+    }
+
     .sidebar #score,
     .sidebar #timer,
     .sidebar #bonusMultiplier {
         width: auto;
         flex: 1 1 30%;
         margin: 5px;
+        font-size: 16px;
+        padding: 5px;
     }
 
-    .sidebar .title {
-        width: 100%;
-        text-align: center;
+    .sidebar .button {
+        width: auto;
+        flex: 1 1 30%;
+        margin: 5px;
+        padding: 8px;
+        font-size: 12px;
     }
 
     .sidebar .upgrade-circle {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
+        font-size: 12px;
         margin: 10px;
     }
 
-    /* Canvas adjustments */
     canvas {
         width: 100% !important;
+        max-width: 300px;
         height: auto !important;
-        max-width: 400px; /* Limit canvas size on small screens */
-        max-height: 400px;
+        aspect-ratio: 1 / 1;
         border-radius: 5px;
     }
 
-    /* Leaderboard adjustments */
+    .bomb-container {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
     .leaderboard {
         width: 100%;
         border-radius: 0;
         padding: 10px;
+        margin-top: 10px;
+        text-align: center;
     }
 
-    /* Reposition game legend below info section */
-    .game-legend {
-        position: static; /* Remove absolute positioning */
-        transform: none; /* Remove transform */
-        width: 100%; /* Full width like info-section */
-        max-width: 1090px; /* Match info-section width */
-        margin: 0 auto; /* Center it */
-        padding: 15px;
-        border-radius: 15px;
-        border: 5px solid #37d4a7;
-        background-color: #2a2a2a; /* Match info-section background */
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7); /* Match info-section shadow */
-        margin-top: 20px; /* Space between info-section and legend */
+    .leaderboard-title {
+        font-size: 18px;
     }
 
-    /* Adjust game-legend content for mobile */
+    .leaderboard-section h3 {
+        font-size: 14px;
+    }
+
+    .leaderboard-entry {
+        font-size: 12px;
+    }
+
     .game-legend .legend-title {
         font-size: 18px;
     }
@@ -452,11 +477,9 @@ canvas {
         font-size: 12px;
     }
 
-    /* Info section adjustments */
     .info-section {
         width: 100%;
-        max-width: 1090px;
-        margin: 0 auto;
+        margin: 10px auto;
         padding: 10px;
         border-radius: 0;
     }

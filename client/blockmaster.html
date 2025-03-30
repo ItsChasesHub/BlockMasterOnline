@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <div class="info-section">If you cannot see the full game and info card, please zoom out!</div>
+    <div class="top-info info-section">If you cannot see the full game and info card, please zoom out!</div>
     
     <div class="game-wrapper">
         <div class="game-legend">
@@ -38,7 +38,7 @@
         </div>
         <div class="game-container">
             <div class="game-content">
-              <div class="bomb-container"></div>
+                <div class="bomb-container"></div>
                 <div class="sidebar">
                     <div class="title">Block Master</div>
                     <div id="score">SCORE<br />00000000</div>
@@ -57,19 +57,19 @@
                 <canvas id="gameCanvas" width="600" height="600"></canvas>
                 <div class="leaderboard">
                     <div class="leaderboard-title">Leaderboard</div>
-                    <div class="leaderboard-section">
+                    <div class="legend-section">
                         <h3>Simple</h3>
                         <div id="simple-leaderboard"></div>
                     </div>
-                    <div class="leaderboard-section">
+                    <div class="legend-section">
                         <h3>Timed</h3>
                         <div id="timed-leaderboard"></div>
                     </div>
-                    <div class="leaderboard-section">
+                    <div class="legend-section">
                         <h3>Explosions</h3>
                         <div id="explosions-leaderboard"></div>
                     </div>
-                    <div class="leaderboard-section">
+                    <div class="legend-section">
                         <h3>Sliders</h3>
                         <div id="sliders-leaderboard"></div>
                     </div>
@@ -78,7 +78,7 @@
         </div>
     </div>
     
-    <div class="info-section">
+    <div class="bottom-info info-section">
         <div class="info-item">
             <a href="https://github.com/ItsChasesHub" target="_blank">
                 <i class="fas fa-laptop-code"></i> Created by: ItsChasesHub
@@ -117,7 +117,6 @@
             </div>
         </div>
     </div>
-    
     <script src="gem-game-core.js"></script>
     <script src="gem-game-mechanics.js"></script>
     <script src="blockmastercopy.js"></script>
