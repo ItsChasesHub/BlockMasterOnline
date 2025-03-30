@@ -4,6 +4,7 @@ class GemGame extends GemGameCore {
         console.log("GemGame constructor completed, starting animation...");
         this.startNewGame();
         this.animate();
+        this.startLeaderboardPolling(); 
     }
 
     animate() {
@@ -377,6 +378,7 @@ class GemGame extends GemGameCore {
                 this.stopTimer();
             }
         }
+        this.startLeaderboardPolling(); // Restart polling on new game
     }
 
     setMode(mode) {
@@ -467,6 +469,7 @@ class GemGame extends GemGameCore {
     endGame() {
         console.log("Ending game (auto-end)...");
         this.stopTimer();
+        this.stopLeaderboardPolling(); // Stop polling when game ends
 
         if (this.score > 0) {
             let playerName = null;
@@ -520,6 +523,7 @@ class GemGame extends GemGameCore {
     endGameWithName() {
         console.log("Ending game (manual end)...");
         this.stopTimer();
+        this.stopLeaderboardPolling(); // Stop polling when game ends
 
         if (this.score > 0) {
             let playerName = null;
@@ -573,7 +577,25 @@ class GemGame extends GemGameCore {
     discardGame() {
         console.log("Discarding game...");
         this.stopTimer();
+        this.stopLeaderboardPolling();
         this.startNewGame();
+    }
+
+    startLeaderboardPolling() {
+        this.stopLeaderboardPolling();
+
+        this.leaderboardPollInterval = setInterval(() => {
+            console.log("Polling for leaderboard updates...");
+            this.fetchLeaderboard();
+        }, 10000);
+    }
+
+    stopLeaderboardPolling() {
+        if (this.leaderboardPollInterval) {
+            clearInterval(this.leaderboardPollInterval);
+            this.leaderboardPollInterval = null;
+            console.log("Stopped leaderboard polling");
+        }
     }
 }
 
