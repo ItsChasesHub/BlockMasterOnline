@@ -587,7 +587,7 @@ class GemGame extends GemGameCore {
         this.leaderboardPollInterval = setInterval(() => {
             console.log("Polling for leaderboard updates...");
             this.fetchLeaderboard();
-        }, 300000);
+        }, 120000);
     }
 
     stopLeaderboardPolling() {
