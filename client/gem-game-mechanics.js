@@ -2,9 +2,19 @@ class GemGame extends GemGameCore {
     constructor() {
         super();
         console.log("GemGame constructor completed, starting animation...");
+        this.setupUpgradeCanvas(); 
+        this.waterLevel = 0;
+        this.targetWaterLevel = 0; 
+        this.maxMultiplier = 20; 
         this.startNewGame();
         this.animate();
-        this.startLeaderboardPolling(); 
+        this.startLeaderboardPolling();
+    }
+
+    setupUpgradeCanvas() {
+        this.upgradeCanvas = document.getElementById("upgradeCanvas");
+        this.upgradeCtx = this.upgradeCanvas.getContext("2d");
+        this.drawWaterLevel();
     }
 
     animate() {
@@ -30,12 +40,88 @@ class GemGame extends GemGameCore {
             if (matches.length > 0) this.removeMatches(matches);
         }
 
+        this.updateWaterLevel();
+
         if (this.lastMatchTime && Date.now() - this.lastMatchTime > 5000 && this.bonusMultiplier > 1) {
             this.bonusMultiplier = 1;
             this.updateBonusDisplay();
         }
 
         requestAnimationFrame(() => this.animate());
+    }
+
+    updateWaterLevel() {
+        this.targetWaterLevel = Math.min(this.bonusMultiplier / this.maxMultiplier, 1);
+
+        const speed = 0.05; 
+        this.waterLevel += (this.targetWaterLevel - this.waterLevel) * speed;
+        this.drawWaterLevel();
+    }
+
+    drawWaterLevel() {
+        const ctx = this.upgradeCtx;
+        const width = this.upgradeCanvas.width;
+        const height = this.upgradeCanvas.height;
+        const radius = width / 2 - 5;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const waterHeight = height * this.waterLevel;
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(0, 191, 255, 0.7)";
+        ctx.rect(0, height - waterHeight, width, waterHeight);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = 2;
+        ctx.moveTo(0, height - waterHeight);
+        for (let x = 0; x <= width; x += 10) {
+            const y = height - waterHeight + Math.sin(x * 0.05 + Date.now() * 0.002) * 5;
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.clip();
+    }
+
+    updateBonusDisplay() {
+        const bonusElement = document.getElementById("bonusMultiplier");
+        if (bonusElement) {
+            let displayMultiplier = Math.round(this.bonusMultiplier);
+            bonusElement.innerHTML = `Multiplier: x${displayMultiplier}`;
+        }
+    }
+
+    startNewGame() {
+        this.score = 0;
+        this.grid = this.createGrid();
+        this.selectedGem = null;
+        this.selectedTile = null;
+        this.isAnimating = false;
+        this.timeLeft = 300;
+        this.bonusMultiplier = 1;
+        this.lastMatchTime = null;
+        this.waterLevel = 0;
+        this.targetWaterLevel = 0;
+        this.updateScoreDisplay();
+        this.updateTimerDisplay();
+        this.updateBonusDisplay();
+        const timerElement = document.getElementById("timer");
+        if (timerElement) {
+            if (this.gameMode === "TIMED") {
+                timerElement.style.display = "block";
+                this.startTimer();
+            } else {
+                timerElement.style.display = "none";
+                this.stopTimer();
+            }
+        }
+        this.startLeaderboardPolling();
     }
 
     drawGem(x, y, gem) {
