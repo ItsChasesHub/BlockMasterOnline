@@ -11,7 +11,8 @@ class SlidersDrag {
         this.lastMoveX = 0;
         this.lastMoveY = 0;
         this.cooldown = 0;
-        this.cooldownTime = 150;
+        this.cooldownTime = 150; 
+        this.matchPauseTime = 1000; 
         this.setupDragListeners();
     }
 
@@ -127,24 +128,33 @@ class SlidersDrag {
 
     afterSlide() {
         const matches = this.game.findMatches();
-        if (matches.length > 0) {
+        let hasMatches = matches.length > 0;
+
+        if (hasMatches) {
             this.game.removeMatches(matches);
+            this.game.fillEmptySpaces();
+            this.isDragging = false;
+            this.game.selectedTile = null;
+
+            this.cooldown = Date.now() + this.matchPauseTime;
+
+            setTimeout(() => {
+                this.game.isAnimating = false;
+                const newMatches = this.game.findMatches();
+                if (newMatches.length > 0) {
+                    this.game.isAnimating = true;
+                    this.game.removeMatches(newMatches);
+                    this.game.fillEmptySpaces();
+                    setTimeout(() => {
+                        this.game.isAnimating = false;
+                    }, this.cooldownTime);
+                }
+            }, this.matchPauseTime); 
+        } else {
+            setTimeout(() => {
+                this.game.isAnimating = false;
+            }, this.cooldownTime);
         }
-
-        this.game.fillEmptySpaces();
-
-        setTimeout(() => {
-            this.game.isAnimating = false;
-            const newMatches = this.game.findMatches();
-            if (newMatches.length > 0) {
-                this.game.isAnimating = true;
-                this.game.removeMatches(newMatches);
-                this.game.fillEmptySpaces();
-                setTimeout(() => {
-                    this.game.isAnimating = false;
-                }, this.cooldownTime);
-            }
-        }, this.cooldownTime);
     }
 
     handleMouseUp(event) {
