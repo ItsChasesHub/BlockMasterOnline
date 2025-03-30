@@ -346,3 +346,138 @@ canvas {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     transition: top 0.1s ease;
 }
+
+/* Mobile support */
+@media (max-width: 768px) {
+    /* Adjust body to ensure full responsiveness */
+    body {
+        flex-direction: column;
+        align-items: stretch;
+        overflow-x: hidden;
+    }
+
+    /* Game wrapper adjustments */
+    .game-wrapper {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Game container adjustments */
+    .game-container {
+        width: 100%;
+        border-radius: 0;
+        padding: 5px;
+        margin: 0;
+    }
+
+    /* Game content adjustments */
+    .game-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Sidebar adjustments */
+    .sidebar {
+        width: 100%;
+        border-radius: 0;
+        padding: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .sidebar .button,
+    .sidebar #score,
+    .sidebar #timer,
+    .sidebar #bonusMultiplier {
+        width: auto;
+        flex: 1 1 30%;
+        margin: 5px;
+    }
+
+    .sidebar .title {
+        width: 100%;
+        text-align: center;
+    }
+
+    .sidebar .upgrade-circle {
+        width: 80px;
+        height: 80px;
+        margin: 10px;
+    }
+
+    /* Canvas adjustments */
+    canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 400px; /* Limit canvas size on small screens */
+        max-height: 400px;
+        border-radius: 5px;
+    }
+
+    /* Leaderboard adjustments */
+    .leaderboard {
+        width: 100%;
+        border-radius: 0;
+        padding: 10px;
+    }
+
+    /* Reposition game legend below info section */
+    .game-legend {
+        position: static; /* Remove absolute positioning */
+        transform: none; /* Remove transform */
+        width: 100%; /* Full width like info-section */
+        max-width: 1090px; /* Match info-section width */
+        margin: 0 auto; /* Center it */
+        padding: 15px;
+        border-radius: 15px;
+        border: 5px solid #37d4a7;
+        background-color: #2a2a2a; /* Match info-section background */
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7); /* Match info-section shadow */
+        margin-top: 20px; /* Space between info-section and legend */
+    }
+
+    /* Adjust game-legend content for mobile */
+    .game-legend .legend-title {
+        font-size: 18px;
+    }
+
+    .game-legend .legend-section h3 {
+        font-size: 14px;
+    }
+
+    .game-legend .legend-entry {
+        font-size: 12px;
+    }
+
+    /* Info section adjustments */
+    .info-section {
+        width: 100%;
+        max-width: 1090px;
+        margin: 0 auto;
+        padding: 10px;
+        border-radius: 0;
+    }
+
+    .info-item {
+        font-size: 14px;
+    }
+
+    .info-item a,
+    .bitcoin-address,
+    .ethereum-address {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .address-container {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .copy-instruction {
+        font-size: 12px;
+    }
+}
