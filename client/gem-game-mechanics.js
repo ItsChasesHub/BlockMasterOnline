@@ -2,18 +2,28 @@ class GemGame extends GemGameCore {
     constructor() {
         super();
         console.log("GemGame constructor completed, starting animation...");
-        this.setupUpgradeCanvas(); 
+        this.setupUpgradeCanvas();
         this.waterLevel = 0;
-        this.targetWaterLevel = 0; 
-        this.maxMultiplier = 20; 
+        this.targetWaterLevel = 0;
+        this.maxMultiplier = 20;
+        this.lastWaterLevel = -1; 
         this.startNewGame();
         this.animate();
         this.startLeaderboardPolling();
+        this.startWaterAnimation(); 
     }
 
     setupUpgradeCanvas() {
         this.upgradeCanvas = document.getElementById("upgradeCanvas");
+        if (!this.upgradeCanvas) {
+            console.error("Upgrade canvas not found!");
+            return;
+        }
         this.upgradeCtx = this.upgradeCanvas.getContext("2d");
+        if (!this.upgradeCtx) {
+            console.error("Failed to get 2D context for upgrade canvas!");
+            return;
+        }
         this.drawWaterLevel();
     }
 
@@ -40,8 +50,6 @@ class GemGame extends GemGameCore {
             if (matches.length > 0) this.removeMatches(matches);
         }
 
-        this.updateWaterLevel();
-
         if (this.lastMatchTime && Date.now() - this.lastMatchTime > 5000 && this.bonusMultiplier > 1) {
             this.bonusMultiplier = 1;
             this.updateBonusDisplay();
@@ -50,15 +58,36 @@ class GemGame extends GemGameCore {
         requestAnimationFrame(() => this.animate());
     }
 
+    startWaterAnimation() {
+        this.waterAnimationInterval = setInterval(() => {
+            this.updateWaterLevel();
+            this.drawWaterLevel();
+        }, 100);
+    }
+
+    stopWaterAnimation() {
+        if (this.waterAnimationInterval) {
+            clearInterval(this.waterAnimationInterval);
+            this.waterAnimationInterval = null;
+        }
+    }
+
     updateWaterLevel() {
         this.targetWaterLevel = Math.min(this.bonusMultiplier / this.maxMultiplier, 1);
+        const fillSpeed = 0.05;
+        const emptySpeed = 0.02;
+        const speed = this.waterLevel < this.targetWaterLevel ? fillSpeed : emptySpeed;
 
-        const speed = 0.05; 
         this.waterLevel += (this.targetWaterLevel - this.waterLevel) * speed;
-        this.drawWaterLevel();
+        this.waterLevel = Math.max(0, Math.min(1, this.waterLevel));
     }
 
     drawWaterLevel() {
+        if (!this.upgradeCtx) return;
+
+        if (Math.abs(this.waterLevel - this.lastWaterLevel) < 0.01) return;
+        this.lastWaterLevel = this.waterLevel;
+
         const ctx = this.upgradeCtx;
         const width = this.upgradeCanvas.width;
         const height = this.upgradeCanvas.height;
@@ -77,11 +106,9 @@ class GemGame extends GemGameCore {
         ctx.beginPath();
         ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
         ctx.lineWidth = 2;
-        ctx.moveTo(0, height - waterHeight);
-        for (let x = 0; x <= width; x += 10) {
-            const y = height - waterHeight + Math.sin(x * 0.05 + Date.now() * 0.002) * 5;
-            ctx.lineTo(x, y);
-        }
+        const waveOffset = Math.sin(Date.now() * 0.001) * 5; 
+        ctx.moveTo(0, height - waterHeight + waveOffset);
+        ctx.lineTo(width, height - waterHeight - waveOffset);
         ctx.stroke();
 
         ctx.beginPath();
@@ -108,6 +135,7 @@ class GemGame extends GemGameCore {
         this.lastMatchTime = null;
         this.waterLevel = 0;
         this.targetWaterLevel = 0;
+        this.lastWaterLevel = -1;
         this.updateScoreDisplay();
         this.updateTimerDisplay();
         this.updateBonusDisplay();
@@ -122,6 +150,8 @@ class GemGame extends GemGameCore {
             }
         }
         this.startLeaderboardPolling();
+        this.stopWaterAnimation();
+        this.startWaterAnimation();
     }
 
     drawGem(x, y, gem) {
@@ -442,31 +472,6 @@ class GemGame extends GemGameCore {
         }
     }
 
-    startNewGame() {
-        this.score = 0;
-        this.grid = this.createGrid();
-        this.selectedGem = null;
-        this.selectedTile = null;
-        this.isAnimating = false;
-        this.timeLeft = 300;
-        this.bonusMultiplier = 1;
-        this.lastMatchTime = null;
-        this.updateScoreDisplay();
-        this.updateTimerDisplay();
-        this.updateBonusDisplay();
-        const timerElement = document.getElementById("timer");
-        if (timerElement) {
-            if (this.gameMode === "TIMED") {
-                timerElement.style.display = "block";
-                this.startTimer();
-            } else {
-                timerElement.style.display = "none";
-                this.stopTimer();
-            }
-        }
-        this.startLeaderboardPolling();
-    }
-
     setMode(mode) {
         this.gameMode = mode;
         this.startNewGame();
@@ -474,88 +479,39 @@ class GemGame extends GemGameCore {
 
     validateName(name) {
         console.log("Validating name:", name);
-
         const trimmedName = name.trim();
         const lowerName = trimmedName.toLowerCase();
 
         if (trimmedName.length < 1 || trimmedName.length > 32) {
-            return {
-                valid: false,
-                message: "Name must be between 1 and 32 characters long."
-            };
+            return { valid: false, message: "Name must be between 1 and 32 characters long." };
         }
-
         if (/\s/.test(trimmedName)) {
-            return {
-                valid: false,
-                message: "Name cannot contain spaces."
-            };
+            return { valid: false, message: "Name cannot contain spaces." };
         }
-
         if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
-            return {
-                valid: false,
-                message: "Name can only contain letters (a-z, A-Z), numbers (0-9), hyphens (-), and underscores (_)."
-            };
+            return { valid: false, message: "Name can only contain letters (a-z, A-Z), numbers (0-9), hyphens (-), and underscores (_)." };
         }
 
         const bannedPatterns = [
-            /\bn[i1][g6]{1,2}[e3][r]/i,
-            /\bf[a@][g6]{1,2}[o0][t]/i,
-            /\b[a@][s$][s$]/i,
-            /\bf[uü][c¢k][k]/i,
-            /\bsh[i1][t]/i,
-            /\bb[i1][t][c¢][h]/i,
-            /\bc[uü][n][t]/i,
-            /\bp[uü][s$][s$][y]/i,
-            /\bd[i1][c¢][k]/i,
-            /\bc[o0][c¢][k]/i,
-            /\bwh[o0][r][e]/i,
-            /\bsl[uü][t]/i,
-            /\bd[a@][m][n]/i,
-            /\bb[a@][s$][t][a@][r][d]/i,
-            /\br[e3][t][a@][r][d]/i
+            /\bn[i1][g6]{1,2}[e3][r]/i, /\bf[a@][g6]{1,2}[o0][t]/i, /\b[a@][s$][s$]/i,
+            /\bf[uü][c¢k][k]/i, /\bsh[i1][t]/i, /\bb[i1][t][c¢][h]/i, /\bc[uü][n][t]/i,
+            /\bp[uü][s$][s$][y]/i, /\bd[i1][c¢][k]/i, /\bc[o0][c¢][k]/i, /\bwh[o0][r][e]/i,
+            /\bsl[uü][t]/i, /\bd[a@][m][n]/i, /\bb[a@][s$][t][a@][r][d]/i, /\br[e3][t][a@][r][d]/i
         ];
 
         for (let pattern of bannedPatterns) {
             if (pattern.test(lowerName)) {
-                return {
-                    valid: false,
-                    message: "Name contains inappropriate content."
-                };
+                return { valid: false, message: "Name contains inappropriate content." };
             }
         }
-
-        return {
-            valid: true,
-            message: ""
-        };
-    }
-
-    async submitScore(name, score, mode) {
-        console.log("Entering submitScore with name:", name, "score:", score, "mode:", mode);
-        try {
-            const response = await fetch('/proxy/submit-score', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, score, mode }),
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to submit score: ${response.status} ${response.statusText}`);
-            }
-            await this.fetchLeaderboard();
-            console.log("Score submitted successfully");
-            alert('Score submitted successfully!');
-        } catch (err) {
-            console.error('Error submitting score:', err.message);
-            alert('Failed to submit score. Please try again later.');
-        }
+        return { valid: true, message: "" };
     }
 
     endGame() {
         console.log("Ending game (auto-end)...");
         this.stopTimer();
         this.stopLeaderboardPolling();
+        this.stopWaterAnimation();
 
         if (this.score > 0) {
             let playerName = null;
@@ -609,7 +565,8 @@ class GemGame extends GemGameCore {
     endGameWithName() {
         console.log("Ending game (manual end)...");
         this.stopTimer();
-        this.stopLeaderboardPolling(); // Stop polling when game ends
+        this.stopLeaderboardPolling();
+        this.stopWaterAnimation();
 
         if (this.score > 0) {
             let playerName = null;
@@ -664,12 +621,12 @@ class GemGame extends GemGameCore {
         console.log("Discarding game...");
         this.stopTimer();
         this.stopLeaderboardPolling();
+        this.stopWaterAnimation();
         this.startNewGame();
     }
 
     startLeaderboardPolling() {
         this.stopLeaderboardPolling();
-
         this.leaderboardPollInterval = setInterval(() => {
             console.log("Polling for leaderboard updates...");
             this.fetchLeaderboard();
