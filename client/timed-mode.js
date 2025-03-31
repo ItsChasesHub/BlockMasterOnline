@@ -22,7 +22,7 @@ class TimedMode extends GemGameCore {
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
         const x = Math.floor((clickX * scaleX) / this.tileSize);
-        const y = Math.floor((clickY * scaleY) / this.tileSize); // Fixed typo: butts.floor -> Math.floor
+        const y = Math.floor((clickY * scaleY) / this.tileSize);
 
         if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return;
 

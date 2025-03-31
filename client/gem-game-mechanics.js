@@ -8,9 +8,9 @@ class GameController {
         this.leaderboardPollInterval = null;
         this.setupUpgradeCanvas();
         this.setupButtons();
-        this.setMode("SIMPLE"); // Start with Simple mode
+        this.setMode("SIMPLE");
         this.startWaterAnimation();
-        this.fetchLeaderboard(); // Fetch leaderboard immediately on load
+        this.fetchLeaderboard();
         this.startLeaderboardPolling();
         this.animate();
     }
@@ -53,7 +53,7 @@ class GameController {
             }
         }
 
-        this.highlightButton("simpleBtn"); // Initial highlight
+        this.highlightButton("simpleBtn");
     }
 
     highlightButton(buttonId) {
@@ -68,7 +68,6 @@ class GameController {
     }
 
     setMode(mode) {
-        // Clean up the current mode's event listeners
         if (this.currentMode) {
             const canvas = this.currentMode.canvas;
             if (this.currentMode.gameMode !== "SLIDERS") {
@@ -84,8 +83,6 @@ class GameController {
             }
             this.currentMode.stopTimer?.();
         }
-
-        // Initialize the new mode with error handling
         try {
             switch (mode) {
                 case "SIMPLE":
@@ -223,7 +220,6 @@ class GameController {
         } catch (err) {
             console.error('Error fetching leaderboard:', err.message);
             this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [], sliders: [] });
-            // Optionally, don't alert here to avoid annoying users on every refresh
             console.log('Displaying empty leaderboard as fallback.');
         }
     }
@@ -237,7 +233,7 @@ class GameController {
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
             console.log(`Score submitted: ${name}, ${score}, ${mode}`);
-            await this.fetchLeaderboard(); // Refresh leaderboard after submission
+            await this.fetchLeaderboard();
             alert('Score submitted successfully!');
         } catch (err) {
             console.error('Error submitting score:', err.message);
@@ -273,7 +269,7 @@ class GameController {
         this.leaderboardPollInterval = setInterval(() => {
             console.log("Polling for leaderboard updates...");
             this.fetchLeaderboard();
-        }, 120000); // 2 minutes
+        }, 120000);
     }
 
     stopLeaderboardPolling() {
