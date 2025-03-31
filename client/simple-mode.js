@@ -26,7 +26,8 @@ class SimpleMode extends GemGameCore {
         if (!this.selectedGem) {
             this.selectedGem = { x, y };
         } else if (this.isAdjacent(this.selectedGem, { x, y })) {
-            const origX1 = this.selectedGem.x, origY1 = this.selectedGem.y;
+            const origX1 = this.selectedGem.x;
+            const origY1 = this.selectedGem.y;
             this.swapGems(origX1, origY1, x, y);
             const matches = this.findMatches();
             if (matches.length === 0) {
@@ -37,6 +38,8 @@ class SimpleMode extends GemGameCore {
                 setTimeout(() => this.isAnimating = false, 500);
             }
             this.selectedGem = null;
+        } else {
+            this.selectedGem = { x, y };
         }
     }
 
