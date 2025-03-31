@@ -6,11 +6,13 @@ class GemGame extends GemGameCore {
         this.waterLevel = 0;
         this.targetWaterLevel = 0;
         this.maxMultiplier = 20;
-        this.lastWaterLevel = -1; 
+        this.lastWaterLevel = -1;
+        this.bombFlashStates = new Map();
+        this.lastBombExplosionTime = 0;
         this.startNewGame();
         this.animate();
         this.startLeaderboardPolling();
-        this.startWaterAnimation(); 
+        this.startWaterAnimation();
     }
 
     setupUpgradeCanvas() {
@@ -30,6 +32,7 @@ class GemGame extends GemGameCore {
     animate() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         let isAnimating = false;
+
         for (let x = 0; x < this.gridSize; x++) {
             for (let y = 0; y < this.gridSize; y++) {
                 const gem = this.grid[x][y];
@@ -48,6 +51,17 @@ class GemGame extends GemGameCore {
             this.fillEmptySpaces();
             const matches = this.findMatches();
             if (matches.length > 0) this.removeMatches(matches);
+
+            if (this.gameMode === "EXPLOSIONS") {
+                const currentTime = Date.now();
+                if (currentTime - this.lastBombExplosionTime >= 15000) { /* 15 seconds */
+                    const bombCount = Math.floor(Math.random() * 2) + 1; /* 1 or 2 bombs */
+                    for (let i = 0; i < bombCount; i++) {
+                        this.spawnRandomBomb();
+                    }
+                    this.lastBombExplosionTime = currentTime;
+                }
+            }
         }
 
         if (this.lastMatchTime && Date.now() - this.lastMatchTime > 5000 && this.bonusMultiplier > 1) {
@@ -56,6 +70,85 @@ class GemGame extends GemGameCore {
         }
 
         requestAnimationFrame(() => this.animate());
+    }
+
+    spawnRandomBomb() {
+        const x = Math.floor(Math.random() * this.gridSize);
+        const y = Math.floor(Math.random() * this.gridSize);
+        if (this.grid[x][y] && !this.grid[x][y].isBomb) {
+            this.grid[x][y].isBomb = true;
+            this.grid[x][y].flashStart = Date.now();
+            console.log(`Spawned bomb at (${x}, ${y})`);
+        }
+    }
+
+    drawGem(x, y, gem) {
+        const centerX = x * this.tileSize + this.tileSize / 2;
+        const centerY = y * this.tileSize + this.tileSize / 2 + gem.offsetY;
+
+        if (gem.isBomb) {
+            let flashColor = "#000000";
+            if (gem.flashStart) {
+                const flashTime = Date.now() - gem.flashStart;
+                const flashCycle = Math.sin(flashTime * 0.01) > 0 ? "#FFFFFF" : "#000000";
+                flashColor = flashCycle;
+                if (flashTime > 5000 && this.gameMode === "EXPLOSIONS") { /* 5000 (5 seconds) */
+                    this.explodeBomb(x, y);
+                    return;
+                }
+            }
+
+            this.ctx.fillStyle = flashColor;
+            this.ctx.beginPath();
+            this.ctx.roundRect(x * this.tileSize + 2, y * this.tileSize + 2 + gem.offsetY, 
+                this.tileSize - 6, this.tileSize - 6, 10);
+            this.ctx.fill();
+
+            this.ctx.fillStyle = "#FF4500";
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY - this.tileSize/4, 4, 0, Math.PI * 2);
+            this.ctx.fill();
+        } else {
+            const gradient = this.ctx.createLinearGradient(
+                x * this.tileSize, y * this.tileSize,
+                x * this.tileSize + this.tileSize, y * this.tileSize + this.tileSize
+            );
+            gradient.addColorStop(0, gem.style.highlight);
+            gradient.addColorStop(0.5, gem.style.base);
+            gradient.addColorStop(1, gem.style.shadow);
+
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.roundRect(x * this.tileSize + 2, y * this.tileSize + 2 + gem.offsetY, 
+                this.tileSize - 6, this.tileSize - 6, 10);
+            this.ctx.fill();
+        }
+
+        if (this.gameMode !== "SLIDERS" && this.selectedGem?.x === x && this.selectedGem?.y === y) {
+            this.ctx.strokeStyle = "rgba(255,255,255,0.7)";
+            this.ctx.lineWidth = 4;
+            this.ctx.stroke();
+        } else if (this.gameMode === "SLIDERS" && this.selectedTile?.x === x && this.selectedTile?.y === y) {
+            this.ctx.strokeStyle = "rgba(255,255,0,0.7)";
+            this.ctx.lineWidth = 4;
+            this.ctx.stroke();
+        }
+    }
+
+    explodeBomb(x, y) {
+        console.log(`Bomb exploding at (${x}, ${y})`);
+        let bombMatches = [{ x, y }];
+        this.addBombMatches({ x, y }, bombMatches);
+        bombMatches.forEach(({ x: bx, y: by }) => {
+            if (this.grid[bx][by]) {
+                this.grid[bx][by] = null;
+                this.score += 20 * this.bonusMultiplier;
+            }
+        });
+        this.isAnimating = true;
+        setTimeout(() => this.isAnimating = false, 500);
+        this.updateScoreDisplay();
+        this.updateBonusDisplay();
     }
 
     startWaterAnimation() {
@@ -106,7 +199,7 @@ class GemGame extends GemGameCore {
         ctx.beginPath();
         ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
         ctx.lineWidth = 2;
-        const waveOffset = Math.sin(Date.now() * 0.001) * 5; 
+        const waveOffset = Math.sin(Date.now() * 0.001) * 5;
         ctx.moveTo(0, height - waterHeight + waveOffset);
         ctx.lineTo(width, height - waterHeight - waveOffset);
         ctx.stroke();
@@ -136,6 +229,7 @@ class GemGame extends GemGameCore {
         this.waterLevel = 0;
         this.targetWaterLevel = 0;
         this.lastWaterLevel = -1;
+        this.bombFlashStates.clear();
         this.updateScoreDisplay();
         this.updateTimerDisplay();
         this.updateBonusDisplay();
@@ -152,41 +246,11 @@ class GemGame extends GemGameCore {
         this.startLeaderboardPolling();
         this.stopWaterAnimation();
         this.startWaterAnimation();
-    }
 
-    drawGem(x, y, gem) {
-        const centerX = x * this.tileSize + this.tileSize / 2;
-        const centerY = y * this.tileSize + this.tileSize / 2 + gem.offsetY;
-
-        const gradient = this.ctx.createLinearGradient(
-            x * this.tileSize, y * this.tileSize,
-            x * this.tileSize + this.tileSize, y * this.tileSize + this.tileSize
-        );
-        gradient.addColorStop(0, gem.style.highlight);
-        gradient.addColorStop(0.5, gem.style.base);
-        gradient.addColorStop(1, gem.style.shadow);
-
-        this.ctx.fillStyle = gradient;
-        this.ctx.beginPath();
-        this.ctx.roundRect(x * this.tileSize + 2, y * this.tileSize + 2 + gem.offsetY, this.tileSize - 6, this.tileSize - 6, 10);
-        this.ctx.fill();
-
-        if (gem.isExplosive) {
-            this.ctx.fillStyle = "white";
-            this.ctx.font = "bold 20px Arial";
-            this.ctx.textAlign = "center";
-            this.ctx.textBaseline = "middle";
-            this.ctx.fillText("✹", centerX, centerY);
-        }
-
-        if (this.gameMode !== "SLIDERS" && this.selectedGem?.x === x && this.selectedGem?.y === y) {
-            this.ctx.strokeStyle = "rgba(255,255,255,0.7)";
-            this.ctx.lineWidth = 4;
-            this.ctx.stroke();
-        } else if (this.gameMode === "SLIDERS" && this.selectedTile?.x === x && this.selectedTile?.y === y) {
-            this.ctx.strokeStyle = "rgba(255,255,0,0.7)";
-            this.ctx.lineWidth = 4;
-            this.ctx.stroke();
+        if (this.gameMode === "EXPLOSIONS") {
+            for (let i = 0; i < 2; i++) {
+                this.spawnRandomBomb();
+            }
         }
     }
 
@@ -366,22 +430,32 @@ class GemGame extends GemGameCore {
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) this.bonusMultiplier += 1;
         this.lastMatchTime = currentTime;
 
-        let explosionMatches = [...matches];
+        let bombMatches = [...matches];
+        let bombTriggered = false;
+
+        matches.forEach(match => {
+            if (this.grid[match.x][match.y]?.isBomb) {
+                bombTriggered = true;
+                this.addBombMatches(match, bombMatches);
+            }
+        });
+
         if (this.gameMode === "EXPLOSIONS") {
             matches.forEach(match => {
-                if (Math.random() < 0.3) {
-                    this.grid[match.x][match.y].isExplosive = true;
-                    const types = ['horizontal', 'vertical', 'both'];
-                    this.grid[match.x][match.y].explosionType = types[Math.floor(Math.random() * types.length)];
-                    this.addExplosionMatches(match, explosionMatches);
+                if (matches.length >= 4 && Math.random() < 0.3) {
+                    if (this.grid[match.x][match.y] && !this.grid[match.x][match.y].isBomb) {
+                        this.grid[match.x][match.y].isBomb = true;
+                        this.grid[match.x][match.y].flashStart = Date.now();
+                        console.log(`Created bomb from match at (${match.x}, ${match.y})`);
+                    }
                 }
             });
         }
 
-        explosionMatches.forEach(({ x, y }) => {
+        bombMatches.forEach(({ x, y }) => {
             if (this.grid[x][y]) {
                 this.grid[x][y] = null;
-                this.score += 10 * this.bonusMultiplier;
+                this.score += (bombTriggered ? 20 : 10) * this.bonusMultiplier;
             }
         });
 
@@ -389,22 +463,20 @@ class GemGame extends GemGameCore {
         this.updateBonusDisplay();
     }
 
-    addExplosionMatches(match, explosionMatches) {
+    addBombMatches(match, bombMatches) {
         const { x, y } = match;
-        if (this.grid[x][y].explosionType === 'horizontal') {
-            for (let i = 0; i < this.gridSize; i++) {
-                if (i !== x && this.grid[i][y]) explosionMatches.push({ x: i, y });
+        const directions = [
+            { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+            { dx: 0, dy: -1 }, { dx: 0, dy: 1 }
+        ];
+        
+        directions.forEach(dir => {
+            const newX = x + dir.dx;
+            const newY = y + dir.dy;
+            if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
+                bombMatches.push({ x: newX, y: newY });
             }
-        } else if (this.grid[x][y].explosionType === 'vertical') {
-            for (let i = 0; i < this.gridSize; i++) {
-                if (i !== y && this.grid[x][i]) explosionMatches.push({ x, y: i });
-            }
-        } else if (this.grid[x][y].explosionType === 'both') {
-            for (let i = 0; i < this.gridSize; i++) {
-                if (i !== x && this.grid[i][y]) explosionMatches.push({ x: i, y });
-                if (i !== y && this.grid[x][i]) explosionMatches.push({ x, y: i });
-            }
-        }
+        });
     }
 
     async fetchLeaderboard() {
@@ -478,10 +550,9 @@ class GemGame extends GemGameCore {
     }
 
     validateName(name) {
-        console.log("Validating name:", name);
         const trimmedName = name.trim();
         const lowerName = trimmedName.toLowerCase();
-
+    
         if (trimmedName.length < 1 || trimmedName.length > 32) {
             return { valid: false, message: "Name must be between 1 and 32 characters long." };
         }
@@ -491,19 +562,31 @@ class GemGame extends GemGameCore {
         if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
             return { valid: false, message: "Name can only contain letters (a-z, A-Z), numbers (0-9), hyphens (-), and underscores (_)." };
         }
-
+    
         const bannedPatterns = [
-            /\bn[i1][g6]{1,2}[e3][r]/i, /\bf[a@][g6]{1,2}[o0][t]/i, /\b[a@][s$][s$]/i,
-            /\bf[uü][c¢k][k]/i, /\bsh[i1][t]/i, /\bb[i1][t][c¢][h]/i, /\bc[uü][n][t]/i,
-            /\bp[uü][s$][s$][y]/i, /\bd[i1][c¢][k]/i, /\bc[o0][c¢][k]/i, /\bwh[o0][r][e]/i,
-            /\bsl[uü][t]/i, /\bd[a@][m][n]/i, /\bb[a@][s$][t][a@][r][d]/i, /\br[e3][t][a@][r][d]/i
+            /[n][i1][g6]{1,2}[e3][r]/i,
+            /[f][a@][g6]{1,2}[o0][t]/i,
+            /[a@][s$][s$]/i,
+            /[f][uü][c¢k][k]/i,
+            /[s][h][i1][t]/i,
+            /[b][i1][t][c¢][h]/i,
+            /[c][uü][n][t]/i,
+            /[p][uü][s$][s$][y]/i,
+            /[d][i1][c¢][k]/i,
+            /[c][o0][c¢][k]/i,
+            /[w][h][o0][r][e]/i,
+            /[s][l][uü][t]/i,
+            /[d][a@][m][n]/i,
+            /[b][a@][s$][t][a@][r][d]/i,
+            /[r][e3][t][a@][r][d]/i
         ];
-
+    
         for (let pattern of bannedPatterns) {
             if (pattern.test(lowerName)) {
                 return { valid: false, message: "Name contains inappropriate content." };
             }
         }
+    
         return { valid: true, message: "" };
     }
 
