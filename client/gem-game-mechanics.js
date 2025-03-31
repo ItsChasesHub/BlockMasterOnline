@@ -58,13 +58,28 @@ class GameController {
 
     highlightButton(buttonId) {
         console.log("Highlighting button:", buttonId);
-        const buttons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
-        buttons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.classList.remove("active");
-        });
+        const modeButtons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
+        const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn"];
         const targetBtn = document.getElementById(buttonId);
-        if (targetBtn) targetBtn.classList.add("active");
+    
+        if (!targetBtn) {
+            console.error(`Button ${buttonId} not found!`);
+            return;
+        }
+    
+        if (modeButtons.includes(buttonId)) {
+            modeButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.classList.remove("active");
+            });
+            targetBtn.classList.add("active");
+        } 
+        else if (actionButtons.includes(buttonId)) {
+            targetBtn.classList.add("active");
+            setTimeout(() => {
+                targetBtn.classList.remove("active");
+            }, 150);
+        }
     }
 
     setMode(mode) {
@@ -309,7 +324,11 @@ class GameController {
             /[s][l][uü][t]/i,
             /[d][a@][m][n]/i,
             /[b][a@][s$][t][a@][r][d]/i,
-            /[r][e3][t][a@][r][d]/i
+            /[r][e3][t][a@][r][d]/i,
+            /[h][o0][e3]/i,
+            /[f][a4][g6]/i,
+            /[v][i1][r][g6][i1][n]/i,
+            /[c][r][a4][c][k][e3][r]/i
         ];
     
         for (let pattern of bannedPatterns) {
@@ -360,7 +379,7 @@ class GameController {
                         console.log("Name validation failed:", validation.message);
                         promptMessage = "Game Over! Your score: " + Math.round(this.currentMode.score) + "\n" +
                                         "Invalid name: " + validation.message + "\n" +
-                                        "Allowed: a-z, A-Z, 0-9, hyphens (-), underscores (_), no spaces, max 32 characters\n" +
+                                        "Allowed: a-z, A-Z, 0-9, hyphens (-), underscores (_), no spaces, max 16 characters\n" +
                                         "Enter your name for the leaderboard:\n" +
                                         "- Click OK to submit with your name\n" +
                                         "- Click Cancel to submit as Anonymous\n" +

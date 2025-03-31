@@ -81,11 +81,11 @@ app.post('/proxy/submit-score', [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
-    .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
+    .isLength({ max: 16 }).withMessage('Name must be at most 16 characters')
     .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
     .customSanitizer(value => sanitize(value)),
   body('score')
-    .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
+    .isInt({ min: 0, max: 2147483647 }).withMessage('Score must be an integer between 0 and 2,147,483,647'),
   body('mode')
     .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
@@ -137,11 +137,11 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
-    .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
+    .isLength({ max: 16 }).withMessage('Name must be at most 16 characters')
     .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
     .customSanitizer(value => sanitize(value)),
   body('score')
-    .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
+    .isInt({ min: 0, max: 2147483647 }).withMessage('Score must be an integer between 0 and 2,147,483,647'),
   body('mode')
     .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
