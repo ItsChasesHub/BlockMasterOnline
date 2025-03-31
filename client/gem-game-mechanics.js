@@ -299,8 +299,8 @@ class GameController {
         const trimmedName = name.trim();
         const lowerName = trimmedName.toLowerCase();
     
-        if (trimmedName.length < 1 || trimmedName.length > 32) {
-            return { valid: false, message: "Name must be between 1 and 32 characters long." };
+        if (trimmedName.length < 1 || trimmedName.length > 16) {
+            return { valid: false, message: "Name must be between 1 and 16 characters long." };
         }
         if (/\s/.test(trimmedName)) {
             return { valid: false, message: "Name cannot contain spaces." };
