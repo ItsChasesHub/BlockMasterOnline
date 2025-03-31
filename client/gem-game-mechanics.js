@@ -10,6 +10,7 @@ class GameController {
         this.setupButtons();
         this.setMode("SIMPLE"); // Start with Simple mode
         this.startWaterAnimation();
+        this.fetchLeaderboard(); // Fetch leaderboard immediately on load
         this.startLeaderboardPolling();
         this.animate();
     }
@@ -105,7 +106,7 @@ class GameController {
                 case "SLIDERS":
                     if (typeof SlidersMode === "undefined") throw new Error("SlidersMode is not defined");
                     this.currentMode = new SlidersMode();
-                    this.currentMode.dragHandler.setupDragListeners(); // Explicitly set up drag listeners
+                    this.currentMode.dragHandler.setupDragListeners();
                     break;
                 default:
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
@@ -212,15 +213,18 @@ class GameController {
     }
 
     async fetchLeaderboard() {
+        console.log("Fetching leaderboard data...");
         try {
             const response = await fetch('/proxy/fetch-scores');
             if (!response.ok) throw new Error(`Failed to fetch leaderboard: ${response.status}`);
             const scores = await response.json();
+            console.log("Leaderboard data received:", scores);
             this.updateLeaderboardDisplay(scores);
         } catch (err) {
             console.error('Error fetching leaderboard:', err.message);
             this.updateLeaderboardDisplay({ simple: [], timed: [], explosions: [], sliders: [] });
-            alert('Failed to fetch leaderboard.');
+            // Optionally, don't alert here to avoid annoying users on every refresh
+            console.log('Displaying empty leaderboard as fallback.');
         }
     }
 
@@ -232,7 +236,8 @@ class GameController {
                 body: JSON.stringify({ name, score, mode })
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
-            await this.fetchLeaderboard();
+            console.log(`Score submitted: ${name}, ${score}, ${mode}`);
+            await this.fetchLeaderboard(); // Refresh leaderboard after submission
             alert('Score submitted successfully!');
         } catch (err) {
             console.error('Error submitting score:', err.message);
@@ -252,16 +257,23 @@ class GameController {
                     div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score}</span>`;
                     list.appendChild(div);
                 });
+                if ((scores[mode] || []).length === 0) {
+                    const div = document.createElement("div");
+                    div.className = "leaderboard-entry";
+                    div.innerHTML = "<span>No scores yet</span>";
+                    list.appendChild(div);
+                }
             }
         });
     }
 
     startLeaderboardPolling() {
         this.stopLeaderboardPolling();
+        console.log("Starting leaderboard polling...");
         this.leaderboardPollInterval = setInterval(() => {
             console.log("Polling for leaderboard updates...");
             this.fetchLeaderboard();
-        }, 120000);
+        }, 120000); // 2 minutes
     }
 
     stopLeaderboardPolling() {
