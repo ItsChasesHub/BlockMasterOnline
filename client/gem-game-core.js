@@ -1,6 +1,6 @@
 class GemGameCore {
     constructor() {
-        console.log("Starting GemGame constructor...");
+        console.log("Starting GemGameCore constructor...");
         this.canvas = document.getElementById("gameCanvas");
         if (!this.canvas) {
             console.error("Canvas element not found! Check your HTML for id='gameCanvas'.");
@@ -31,44 +31,6 @@ class GemGameCore {
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
         this.grid = this.createGrid();
-
-        this.setupEventListeners();
-        this.updateScoreDisplay();
-        this.updateTimerDisplay();
-        this.updateBonusDisplay();
-        this.fetchLeaderboard();
-        this.highlightButton("simpleBtn");
-    }
-
-    setupEventListeners() {
-        const buttons = {
-            newGameBtn: () => this.startNewGame(),
-            simpleBtn: () => { this.setMode("SIMPLE"); this.highlightButton("simpleBtn"); },
-            timedBtn: () => { this.setMode("TIMED"); this.highlightButton("timedBtn"); },
-            explosionsBtn: () => { this.setMode("EXPLOSIONS"); this.highlightButton("explosionsBtn"); },
-            slidersBtn: () => { this.setMode("SLIDERS"); this.highlightButton("slidersBtn"); },
-            endGameBtn: () => this.endGameWithName(),
-            discardGameBtn: () => this.discardGame()
-        };
-
-        for (const [id, handler] of Object.entries(buttons)) {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener("click", handler);
-            else console.error(`${id} not found!`);
-        }
-
-        this.canvas.addEventListener("click", this.handleClick.bind(this));
-    }
-
-    highlightButton(buttonId) {
-        console.log("Highlighting button:", buttonId);
-        const buttons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
-        buttons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.classList.remove("active");
-        });
-        const targetBtn = document.getElementById(buttonId);
-        if (targetBtn) targetBtn.classList.add("active");
     }
 
     createGemGradient(baseColor) {
@@ -126,8 +88,8 @@ class GemGameCore {
             style: this.gemStyles[Math.floor(Math.random() * this.gemStyles.length)],
             offsetY: 0,
             targetOffsetY: 0,
-            isExplosive: false,
-            explosionType: null
+            isBomb: false,
+            flashStart: null
         };
     }
 
@@ -145,7 +107,6 @@ class GemGameCore {
             const minutes = Math.floor(this.timeLeft / 60);
             const seconds = Math.floor(this.timeLeft % 60);
             timerElement.innerHTML = `TIME<br>${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-            if (this.timeLeft <= 0 && this.gameMode === "TIMED") this.endGame();
         }
     }
 
@@ -155,5 +116,80 @@ class GemGameCore {
             let displayMultiplier = Math.round(this.bonusMultiplier);
             bonusElement.innerHTML = `Multiplier: x${displayMultiplier}`;
         }
+    }
+
+    findMatches(customGrid = null) {
+        const gridToCheck = customGrid || this.grid;
+        const matches = [];
+        for (let y = 0; y < this.gridSize; y++) {
+            for (let x = 0; x < this.gridSize - 2; x++) {
+                if (
+                    gridToCheck[x][y] && gridToCheck[x + 1][y] && gridToCheck[x + 2][y] &&
+                    gridToCheck[x][y].style.base === gridToCheck[x + 1][y].style.base &&
+                    gridToCheck[x][y].style.base === gridToCheck[x + 2][y].style.base
+                ) {
+                    matches.push({ x, y }, { x: x + 1, y }, { x: x + 2, y });
+                }
+            }
+        }
+        for (let x = 0; x < this.gridSize; x++) {
+            for (let y = 0; y < this.gridSize - 2; y++) {
+                if (
+                    gridToCheck[x][y] && gridToCheck[x][y + 1] && gridToCheck[x][y + 2] &&
+                    gridToCheck[x][y].style.base === gridToCheck[x][y + 1].style.base &&
+                    gridToCheck[x][y].style.base === gridToCheck[x][y + 2].style.base
+                ) {
+                    matches.push({ x, y }, { x, y: y + 1 }, { x, y: y + 2 });
+                }
+            }
+        }
+        return Array.from(new Set(matches.map(m => `${m.x},${m.y}`))).map(key => {
+            const [x, y] = key.split(",").map(Number);
+            return { x, y };
+        });
+    }
+
+    fillEmptySpaces() {
+        const columnsToFill = new Set();
+        for (let x = 0; x < this.gridSize; x++) {
+            let writeIndex = this.gridSize - 1;
+            for (let y = this.gridSize - 1; y >= 0; y--) {
+                if (this.grid[x][y] !== null) {
+                    this.grid[x][writeIndex] = this.grid[x][y];
+                    const fallDistance = writeIndex - y;
+                    if (fallDistance > 0) {
+                        this.grid[x][writeIndex].targetOffsetY = 0;
+                        this.grid[x][writeIndex].offsetY = -fallDistance * this.tileSize;
+                        columnsToFill.add(x);
+                    }
+                    writeIndex--;
+                }
+            }
+            while (writeIndex >= 0) {
+                const newGem = this.getRandomGem();
+                newGem.targetOffsetY = 0;
+                newGem.offsetY = -(writeIndex + 1) * this.tileSize;
+                this.grid[x][writeIndex] = newGem;
+                columnsToFill.add(x);
+                writeIndex--;
+            }
+        }
+        if (columnsToFill.size > 0) {
+            this.isAnimating = true;
+            setTimeout(() => this.isAnimating = false, 500);
+        }
+    }
+
+    swapGems(x1, y1, x2, y2) {
+        const temp = this.grid[x1][y1];
+        this.grid[x1][y1] = this.grid[x2][y2];
+        this.grid[x2][y2] = temp;
+        const tempOffset = this.grid[x1][y1].offsetY;
+        this.grid[x1][y1].offsetY = this.grid[x2][y2].offsetY;
+        this.grid[x2][y2].offsetY = tempOffset;
+    }
+
+    isAdjacent(gem1, gem2) {
+        return Math.abs(gem1.x - gem2.x) + Math.abs(gem1.y - gem2.y) === 1;
     }
 }
