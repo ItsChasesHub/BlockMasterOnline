@@ -39,7 +39,6 @@ class ExplosionsMode extends GemGameCore {
             } else {
                 this.isAnimating = true;
                 this.removeMatches(matches);
-                setTimeout(() => this.isAnimating = false, 500);
             }
             this.selectedGem = null;
         } else {
@@ -67,8 +66,6 @@ class ExplosionsMode extends GemGameCore {
                 this.score += 20 * this.bonusMultiplier;
             }
         });
-        this.isAnimating = true;
-        setTimeout(() => this.isAnimating = false, 500);
         this.updateScoreDisplay();
         this.updateBonusDisplay();
     }
@@ -89,41 +86,63 @@ class ExplosionsMode extends GemGameCore {
         });
     }
 
+    addMatchExplosion(matches, explosionMatches) {
+        if (Math.random() < 0.5) { 
+            const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+            const { x, y } = randomMatch;
+            const rand = Math.random();
+            if (rand < 0.5) { 
+                console.log(`Column explosion triggered at (${x}, ${y})`);
+                for (let i = 0; i < this.gridSize; i++) { 
+                    if (this.grid[x][i]) explosionMatches.push({ x, y: i });
+                }
+            } else { 
+                console.log(`Row explosion triggered at (${x}, ${y})`);
+                for (let i = 0; i < this.gridSize; i++) { 
+                    if (this.grid[i][y]) explosionMatches.push({ x: i, y });
+                }
+            }
+        }
+    }
+
     removeMatches(matches) {
         const currentTime = Date.now();
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) this.bonusMultiplier += 1;
         this.lastMatchTime = currentTime;
 
-        let bombMatches = [...matches];
-        let bombTriggered = false;
+        let bombMatches = [];
+        let matchExplosionMatches = [...matches];
+        let hasExplosionEffect = false;
 
         matches.forEach(match => {
             if (this.grid[match.x][match.y]?.isBomb) {
-                bombTriggered = true;
                 this.addBombMatches(match, bombMatches);
+                hasExplosionEffect = true;
             }
         });
 
-        matches.forEach(match => {
-            if (matches.length >= 4 && Math.random() < 0.3) {
-                if (this.grid[match.x][match.y] && !this.grid[match.x][match.y].isBomb) {
-                    this.grid[match.x][match.y].isBomb = true;
-                    this.grid[match.x][match.y].flashStart = Date.now();
-                    console.log(`Created bomb from match at (${match.x}, ${match.y})`);
-                }
-            }
+        this.addMatchExplosion(matches, matchExplosionMatches);
+        if (matchExplosionMatches.length > matches.length) hasExplosionEffect = true;
+
+        const allMatches = [...new Set([...matches, ...bombMatches, ...matchExplosionMatches].map(m => `${m.x},${m.y}`))].map(key => {
+            const [x, y] = key.split(",").map(Number);
+            return { x, y };
         });
 
-        bombMatches.forEach(({ x, y }) => {
+        allMatches.forEach(({ x, y }) => {
             if (this.grid[x][y]) {
                 this.grid[x][y] = null;
-                this.score += (bombTriggered ? 20 : 10) * this.bonusMultiplier;
+                this.score += 10 * this.bonusMultiplier;
             }
         });
 
         this.updateScoreDisplay();
         this.updateBonusDisplay();
-        this.fillEmptySpaces();
+
+        setTimeout(() => {
+            this.fillEmptySpaces();
+            this.isAnimating = false;
+        }, hasExplosionEffect ? 1000 : 500);
     }
 
     drawGem(x, y, gem) {
@@ -137,7 +156,12 @@ class ExplosionsMode extends GemGameCore {
                 const flashCycle = Math.sin(flashTime * 0.01) > 0 ? "#FFFFFF" : "#000000";
                 flashColor = flashCycle;
                 if (flashTime > 5000) {
+                    this.isAnimating = true;
                     this.explodeBomb(x, y);
+                    setTimeout(() => {
+                        this.fillEmptySpaces();
+                        this.isAnimating = false;
+                    }, 1000);
                     return;
                 }
             }
@@ -194,17 +218,19 @@ class ExplosionsMode extends GemGameCore {
         }
 
         if (!isAnimating && !this.isAnimating) {
-            this.fillEmptySpaces();
             const matches = this.findMatches();
-            if (matches.length > 0) this.removeMatches(matches);
-
-            const currentTime = Date.now();
-            if (currentTime - this.lastBombExplosionTime >= 15000) {
-                const bombCount = Math.floor(Math.random() * 2) + 1;
-                for (let i = 0; i < bombCount; i++) {
-                    this.spawnRandomBomb();
+            if (matches.length > 0) {
+                this.removeMatches(matches);
+            } else {
+                this.fillEmptySpaces();
+                const currentTime = Date.now();
+                if (currentTime - this.lastBombExplosionTime >= 15000) {
+                    const bombCount = Math.floor(Math.random() * 2) + 1;
+                    for (let i = 0; i < bombCount; i++) {
+                        this.spawnRandomBomb();
+                    }
+                    this.lastBombExplosionTime = currentTime;
                 }
-                this.lastBombExplosionTime = currentTime;
             }
         }
 
