@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
-app.get('/client/favicon.ico', (req, res) => res.status(204).end());
+/* app.get('/client/favicon.ico', (req, res) => res.status(204).end()); * Might be cause of Icon not loading */
 
 app.use(cors());
 app.use(express.json());
