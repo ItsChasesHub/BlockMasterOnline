@@ -370,6 +370,7 @@ canvas {
     border-radius: 15px;
     padding: 20px;
     width: 300px;
+    max-width: 90%;
     text-align: center;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
 }
@@ -407,7 +408,7 @@ canvas {
 .error-message {
     color: #ff5555;
     font-size: 14px;
-    min-height: 20px; 
+    min-height: 20px;
 }
 
 .modal-buttons {
@@ -427,6 +428,20 @@ canvas {
     font-size: 12px;
     color: #cccccc;
     margin-top: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.alert-title {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #37d4a7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: rainbow 5s infinite; 
+}
+
+#customAlertMessage {
+    font-size: 16px;
+    margin: 10px 0;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -580,6 +595,7 @@ canvas {
     .copy-instruction {
         font-size: 12px;
     }
+
     .modal-content {
         width: 80%;
         padding: 15px;
@@ -587,7 +603,7 @@ canvas {
     }
 
     .modal-content h2 {
-        font-size: 20px; 
+        font-size: 20px;
     }
 
     .modal-content p {
@@ -605,7 +621,7 @@ canvas {
     }
 
     .modal-buttons {
-        flex-direction: column; 
+        flex-direction: column;
         gap: 8px;
     }
 
@@ -616,5 +632,13 @@ canvas {
 
     .modal-info {
         font-size: 10px;
+    }
+
+    .alert-title {
+        font-size: 20px;
+    }
+
+    #customAlertMessage {
+        font-size: 14px;
     }
 }

@@ -127,7 +127,7 @@ class GameController {
             }
         } catch (error) {
             console.error(`Failed to set mode ${mode}: ${error.message}`);
-            alert(`Error: ${error.message}. Falling back to Simple mode.`);
+            this.showCustomAlert(`Error: ${error.message}. Falling back to Simple mode.`);
             this.currentMode = new SimpleMode();
             this.currentMode.setupEventListeners();
         }
@@ -249,11 +249,31 @@ class GameController {
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
             console.log(`Score submitted: ${name}, ${score}, ${mode}`);
             await this.fetchLeaderboard();
-            alert('Score submitted successfully!');
+            this.showCustomAlert('Score submitted successfully!');
         } catch (err) {
             console.error('Error submitting score:', err.message);
-            alert('Failed to submit score.');
+            this.showCustomAlert('Failed to submit score.');
         }
+    }
+
+    showCustomAlert(message) {
+        const modal = document.getElementById("customAlertModal");
+        const messageDisplay = document.getElementById("customAlertMessage");
+        const okBtn = document.getElementById("customAlertOkBtn");
+
+        messageDisplay.textContent = message;
+        modal.style.display = "flex";
+
+        okBtn.onclick = () => {
+            modal.style.display = "none";
+        };
+
+        document.addEventListener('keydown', function handler(e) {
+            if (e.key === "Enter" && modal.style.display === "flex") {
+                modal.style.display = "none";
+                document.removeEventListener('keydown', handler);
+            }
+        });
     }
 
     updateLeaderboardDisplay(scores) {
