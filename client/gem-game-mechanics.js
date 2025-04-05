@@ -8,6 +8,7 @@ class GameController {
         this.leaderboardPollInterval = null;
         this.setupUpgradeCanvas();
         this.setupButtons();
+        this.setupSettings();
         this.setMode("SIMPLE");
         this.startWaterAnimation();
         this.fetchLeaderboard();
@@ -80,6 +81,64 @@ class GameController {
                 targetBtn.classList.remove("active");
             }, 150);
         }
+    }
+
+    setupSettings() {
+        const settingsBtn = document.getElementById("settingsBtn");
+        const settingsModal = document.getElementById("settingsModal");
+        const closeBtn = document.getElementById("settingsCloseBtn");
+        const blockDesignSelect = document.getElementById("blockDesignSelect");
+        const blockColorSelect = document.getElementById("blockColorSelect");
+        const musicToggle = document.getElementById("musicToggle");
+        const soundToggle = document.getElementById("soundToggle");
+    
+        settingsBtn.addEventListener("click", () => {
+            settingsModal.style.display = settingsModal.style.display === "flex" ? "none" : "flex";
+        });
+    
+        closeBtn.addEventListener("click", () => {
+            settingsModal.style.display = "none";
+        });
+    
+        blockDesignSelect.addEventListener("change", (e) => {
+            const design = e.target.value;
+            console.log(`Block design changed to: ${design}`);
+            this.updateBlockDesign(design);
+        });
+    
+        blockColorSelect.addEventListener("change", (e) => {
+            const color = e.target.value;
+            console.log(`Block color changed to: ${color}`);
+            this.updateBlockColor(color);
+        });
+    
+        musicToggle.addEventListener("change", (e) => {
+            const enabled = e.target.checked;
+            console.log(`Music ${enabled ? "enabled" : "disabled"}`);
+            this.toggleMusic(enabled);
+        });
+    
+        soundToggle.addEventListener("change", (e) => {
+            const enabled = e.target.checked;
+            console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
+            this.toggleSound(enabled);
+        });
+    }
+
+    updateBlockDesign(design) {
+        /* Placeholder: Implement logic to change block design, need time to design it all out the way I want */
+    }
+
+    updateBlockColor(color) {
+        /* Placeholder: Implement logic to change block colors, need time to design it all out the way I want */
+    }
+
+    toggleMusic(enabled) {
+        /* Placeholder: Implement logic to enable/disable music, need time to find good music for game */
+    }
+
+    toggleSound(enabled) {
+        /* Placeholder: Implement logic to enable/disable sound effects, need time to find good sounds for the game */
     }
 
     setMode(mode) {

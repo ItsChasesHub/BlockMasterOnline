@@ -9,6 +9,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
+    <div class="settings-icon">
+        <i class="fas fa-gear" id="settingsBtn"></i>
+    </div>
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h2 class="settings-title">Settings</h2>
+            <div class="settings-section">
+                <h3>Block Design</h3>
+                <select id="blockDesignSelect">
+                    <option value="default">Default</option>
+                    <option value="rounded">Rounded</option>
+                    <option value="pixel">Pixelated</option>
+                </select>
+            </div>
+            <div class="settings-section">
+                <h3>Block Color</h3>
+                <select id="blockColorSelect">
+                    <option value="classic">Classic</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="neon">Neon</option>
+                </select>
+            </div>
+            <div class="settings-section">
+                <h3>Music</h3>
+                <label class="switch">
+                    <input type="checkbox" id="musicToggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="settings-section">
+                <h3>Sound Effects</h3>
+                <label class="switch">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="modal-buttons">
+                <button id="settingsCloseBtn" class="button">Close</button>
+            </div>
+        </div>
+    </div>
     <div class="top-info info-section">v4.65.31 -- If you cannot see the full game and info card, please zoom out!</div>
     <div class="game-wrapper">
         <div class="game-legend">
