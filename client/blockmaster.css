@@ -351,6 +351,85 @@ canvas {
     transition: top 0.1s ease;
 }
 
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #2a2a2a;
+    border: 5px solid #37d4a7;
+    border-radius: 15px;
+    padding: 20px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.modal-content h2 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #37d4a7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content p {
+    font-size: 16px;
+    margin: 5px 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+#playerNameInput {
+    width: 80%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 2px solid #37d4a7;
+    border-radius: 5px;
+    background-color: #cecece;
+    color: #414141;
+    font-size: 14px;
+    text-align: center;
+}
+
+#playerNameInput:focus {
+    outline: none;
+    border-color: #ffffff;
+}
+
+.error-message {
+    color: #ff5555;
+    font-size: 14px;
+    min-height: 20px; 
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-buttons .button {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.modal-info {
+    font-size: 12px;
+    color: #cccccc;
+    margin-top: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 @media (max-width: 768px) {
     body {
         align-items: stretch;
@@ -366,17 +445,16 @@ canvas {
 
     .game-container {
         width: 100%;
-        border-radius: 0;
-        padding: 5px;
         flex-direction: column;
         align-items: center;
         height: auto;
+        margin: 1.2%;
     }
 
     .game-legend {
         width: 100%;
         max-width: 1090px;
-        height: auto;
+        height: 400px;
         margin: 10px auto;
         padding: 15px;
         background-color: #2a2a2a;
@@ -433,7 +511,7 @@ canvas {
 
     canvas {
         width: 100% !important;
-        max-width: 300px;
+        max-width: 375px;
         height: auto !important;
         aspect-ratio: 1 / 1;
         border-radius: 5px;
@@ -481,8 +559,6 @@ canvas {
     .info-section {
         width: 100%;
         margin: 10px auto;
-        padding: 10px;
-        border-radius: 0;
     }
 
     .info-item {
@@ -503,5 +579,42 @@ canvas {
 
     .copy-instruction {
         font-size: 12px;
+    }
+    .modal-content {
+        width: 80%;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .modal-content h2 {
+        font-size: 20px; 
+    }
+
+    .modal-content p {
+        font-size: 14px;
+    }
+
+    #playerNameInput {
+        width: 90%;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .error-message {
+        font-size: 12px;
+    }
+
+    .modal-buttons {
+        flex-direction: column; 
+        gap: 8px;
+    }
+
+    .modal-buttons .button {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .modal-info {
+        font-size: 10px;
     }
 }

@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Block Master</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="blockmaster.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <div class="top-info info-section">v4.63.31 -- If you cannot see the full game and info card, please zoom out!</div>
+    <div class="top-info info-section">v4.65.31 -- If you cannot see the full game and info card, please zoom out!</div>
     <div class="game-wrapper">
         <div class="game-legend">
             <div class="legend-title">Game Legend</div>
@@ -16,7 +17,7 @@
               <h3>Leaderboard Note</h3>
               <div class="legend-entry">Leaderboard refreshes every 2 minutes automatically or you can manually refresh the page to see it update.</div>
               <h3>Mobile Note</h3>
-              <div class="legend-entry">Game is still in a WIP! Move the page around to see the leaderboard on the right side of the game.</div>
+              <div class="legend-entry">Move the page up and down to see the full content.</div>
                 <h3>How to Play</h3>
                 <div class="legend-entry">Click a tile with another tile to swap around and play.</div>
                 <div class="legend-entry">Tile highlights where you last clicked and stays highlighted until a match has been made.</div>
@@ -80,6 +81,21 @@
                         <h3>Sliders</h3>
                         <div id="sliders-leaderboard"></div>
                     </div>
+                </div>
+            </div>
+            <div id="scoreSubmitModal" class="modal">
+                <div class="modal-content">
+                    <h2>Game Over!</h2>
+                    <p id="modalScore">Your score: 0</p>
+                    <p>Enter your name for the leaderboard:</p>
+                    <input type="text" id="playerNameInput" maxlength="16" placeholder="Name (max 16 chars)">
+                    <p id="nameError" class="error-message"></p>
+                    <div class="modal-buttons">
+                        <button id="submitNameBtn" class="button">Submit</button>
+                        <button id="anonymousBtn" class="button">Anonymous</button>
+                        <button id="discardBtn" class="button">Discard</button>
+                    </div>
+                    <p class="modal-info">Allowed: 16 Characters, a-z, A-Z, 0-9, -, _ (no spaces)</p>
                 </div>
             </div>
         </div>

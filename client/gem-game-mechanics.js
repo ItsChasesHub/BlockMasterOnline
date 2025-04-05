@@ -346,51 +346,72 @@ class GameController {
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
 
-        if (this.currentMode.score > 0) {
-            let playerName = null;
-            let isValidName = false;
-            let promptMessage = "Game Over! Your score: " + Math.round(this.currentMode.score) + "\n" +
-                                "Enter your name for the leaderboard:\n" +
-                                "- Click OK to submit with your name\n" +
-                                "- Click Cancel to submit as Anonymous\n" +
-                                "- Type 'Discard' and click OK to discard your score";
+        if (this.currentMode.score <= 0) {
+            this.startNewGame(this.currentMode.gameMode);
+            return;
+        }
 
-            while (!isValidName) {
-                playerName = prompt(promptMessage);
-                console.log("Player entered name:", playerName);
+        const modal = document.getElementById("scoreSubmitModal");
+        const scoreDisplay = document.getElementById("modalScore");
+        const nameInput = document.getElementById("playerNameInput");
+        const errorDisplay = document.getElementById("nameError");
+        const submitBtn = document.getElementById("submitNameBtn");
+        const anonymousBtn = document.getElementById("anonymousBtn");
+        const discardBtn = document.getElementById("discardBtn");
 
-                if (playerName && playerName.trim().toLowerCase() === 'discard') {
-                    console.log("User chose to discard the game.");
-                    this.discardGame();
-                    return;
-                }
+        scoreDisplay.textContent = `Your score: ${Math.round(this.currentMode.score)}`;
+        nameInput.value = "";
+        errorDisplay.textContent = "";
+        modal.style.display = "flex";
 
-                if (playerName === null || playerName.trim() === "") {
-                    playerName = "Anonymous";
-                    console.log("Name was null or empty, set to 'Anonymous'");
-                    isValidName = true;
-                } else {
-                    playerName = playerName.trim();
-                    const validation = this.validateName(playerName);
-                    if (validation.valid) {
-                        console.log("Name is valid:", playerName);
-                        isValidName = true;
-                    } else {
-                        console.log("Name validation failed:", validation.message);
-                        promptMessage = "Game Over! Your score: " + Math.round(this.currentMode.score) + "\n" +
-                                        "Invalid name: " + validation.message + "\n" +
-                                        "Allowed: a-z, A-Z, 0-9, hyphens (-), underscores (_), no spaces, max 16 characters\n" +
-                                        "Enter your name for the leaderboard:\n" +
-                                        "- Click OK to submit with your name\n" +
-                                        "- Click Cancel to submit as Anonymous\n" +
-                                        "- Type 'Discard' and click OK to discard your score";
-                    }
-                }
+        const submitScoreHandler = () => {
+            const playerName = nameInput.value.trim();
+            if (playerName.toLowerCase() === "discard") {
+                console.log("User chose to discard the game.");
+                this.discardGame();
+                modal.style.display = "none";
+                return;
             }
 
-            this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode);
-        }
-        this.startNewGame(this.currentMode.gameMode);
+            if (playerName === "") {
+                console.log("Name was empty, submitting as Anonymous");
+                this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
+                modal.style.display = "none";
+                this.startNewGame(this.currentMode.gameMode);
+            } else {
+                const validation = this.validateName(playerName);
+                if (validation.valid) {
+                    console.log("Name is valid:", playerName);
+                    this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode);
+                    modal.style.display = "none";
+                    this.startNewGame(this.currentMode.gameMode);
+                } else {
+                    console.log("Name validation failed:", validation.message);
+                    errorDisplay.textContent = validation.message;
+                }
+            }
+        };
+
+        submitBtn.onclick = submitScoreHandler;
+        anonymousBtn.onclick = () => {
+            console.log("Submitting as Anonymous");
+            this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
+            modal.style.display = "none";
+            this.startNewGame(this.currentMode.gameMode);
+        };
+        discardBtn.onclick = () => {
+            console.log("User chose to discard the game.");
+            this.discardGame();
+            modal.style.display = "none";
+        };
+
+        nameInput.onkeydown = (e) => {
+            if (e.key === "Enter") {
+                submitScoreHandler();
+            }
+        };
+
+        nameInput.focus();
     }
 
     discardGame() {
