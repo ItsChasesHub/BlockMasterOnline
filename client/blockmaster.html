@@ -1,91 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Block Master</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="blockmaster.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  </head>
-  <body>
-    <div class="game-wrapper">
-      <div class="game-container">
-        <div class="sidebar">
-          <div class="title">Block Master</div>
-          <div id="score">SCORE<br />00000000</div>
-          <div id="timer">TIME<br />00:00</div>
-          <button class="button" id="newGameBtn">NEW GAME</button>
-          <button class="button" id="simpleBtn">SIMPLE</button>
-          <button class="button" id="timedBtn">TIMED</button>
-          <button class="button" id="explosionsBtn">EXPLOSIONS</button>
-          <button class="button" id="slidersBtn">SLIDERS</button>
-          <div class="upgrade-circle">Multiplier</div>
-          <div id="bonusMultiplier">Multiplier: x1</div>
-          <br>
-          <button class="button" id="endGameBtn">END</button>
-          <button class="button" id="discardGameBtn">DISCARD GAME</button>
-        </div>
-        <canvas id="gameCanvas" width="600" height="600"></canvas>
-        <div class="leaderboard">
-          <div class="leaderboard-title">Leaderboard</div>
-          <div class="leaderboard-section">
-            <h3>Simple</h3>
-            <div id="simple-leaderboard"></div>
-          </div>
-          <div class="leaderboard-section">
-            <h3>Timed</h3>
-            <div id="timed-leaderboard"></div>
-          </div>
-          <div class="leaderboard-section">
-            <h3>Explosions</h3>
-            <div id="explosions-leaderboard"></div>
-          </div>
-          <div class="leaderboard-section">
-            <h3>Sliders</h3>
-            <div id="sliders-leaderboard"></div>
-          </div>
-        </div>
-      </div>
-      <div class="info-section">
-      <div class="info-item">
-        <a href="https://github.com/ItsChasesHub" target="_blank">
-          <i class="fas fa-laptop-code"></i> Created by: ItsChasesHub
-        </a>
-      </div>
-        <div class="info-item">
-          <a href="https://github.com/ItsChasesHub/BlockMasterOnline" target="_blank">
-            <i class="fab fa-github"></i> GitHub - Game Developement & Source
-          </a>
-        </div>
-        <div class="info-item">
-          <a href="https://trello.com/b/ORKX4nno/blockmasteronline" target="_blank">
-            <i class="fab fa-trello"></i> Trello - Game Developement, Bug & Fix Tracking
-          </a>
-        </div>
-        <div class="info-item">
-          <span>
-            <i class="fab fa-bitcoin"></i> Bitcoin Donations (Only if you feel like supporting the creator)
-          </span>
-          <div class="address-container">
-            <span class="copy-instruction">Click Address to Copy</span>
-            <span class="bitcoin-address" data-address="1Ffv3XzG8nnTRd76poff6b5b593VZNzACJ">
-              1Ffv3XzG8nnTRd76poff6b5b593VZNzACJ
-            </span>
-          </div>
-        </div>
-        <div class="info-item">
-          <span>
-            <i class="fab fa-ethereum"></i> Ethereum Donations (Only if you feel like supporting the creator)
-          </span>
-          <div class="address-container">
-            <span class="copy-instruction">Click Address to Copy</span>
-            <span class="ethereum-address" data-address="0x850564A34c0Eb953f98DC7068781aF1755904B08">
-              0x850564A34c0Eb953f98DC7068781aF1755904B08
-            </span>
-          </div>
-        </div>
-      </div>
+</head>
+<body>
+    <div class="settings-icon">
+        <i class="fas fa-gear" id="settingsBtn"></i>
     </div>
-    <script src="blockmaster.js"></script>
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h2 class="settings-title">Settings</h2>
+            <div class="settings-section">
+                <h3>Block Design</h3>
+                <select id="blockDesignSelect">
+                    <option value="default">Default</option>
+                </select>
+            </div>
+            <div class="settings-section">
+                <h3>Block Color</h3>
+                <select id="blockColorSelect">
+                    <option value="classic">Classic</option>
+                </select>
+            </div>
+            <div class="settings-section">
+                <h3>Music</h3>
+                <label class="switch">
+                    <input type="checkbox" id="musicToggle" checked>
+                    <span class="slider round"></span>
+                </label>
+                <div class="volume-control">
+                    <label for="musicVolume">Volume:</label>
+                    <input type="range" id="musicVolume" min="0" max="100" value="50">
+                </div>
+                <button id="nextSongBtn" class="button">Next Song</button>
+            </div>
+            <div class="settings-section">
+                <h3>Sound Effects</h3>
+                <label class="switch">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="slider round"></span>
+                </label>
+                <div class="volume-control">
+                    <label for="soundVolume">Volume:</label>
+                    <input type="range" id="soundVolume" min="0" max="100" value="50">
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button id="settingsCloseBtn" class="button">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="top-info info-section">v4.67.37 -- If you cannot see the full game and info card! <span style="color: #FF0000;">Looking for game Sponsors!</span></div>
+    <div class="game-wrapper">
+        <div class="game-legend">
+            <div class="legend-title">Game Legend</div>
+            <div class="legend-section">
+              <h3>Leaderboard Note</h3>
+              <div class="legend-entry">Leaderboard refreshes every 2 minutes automatically or you can manually refresh the page to see it update.</div>
+              <h3>Mobile Note</h3>
+              <div class="legend-entry">Move the page up and down to see the full content.</div>
+                <h3>How to Play</h3>
+                <div class="legend-entry">Click a tile with another tile to swap around and play.</div>
+                <div class="legend-entry">Tile highlights where you last clicked and stays highlighted until a match has been made.</div>
+                <div class="legend-entry">Match 3 or more gems of the same color horizontally or vertically to score points.</div>
+                <div class="legend-entry">In SIMPLE, TIMED, and EXPLOSIONS modes, click two adjacent gems to swap them.</div>
+                <div class="legend-entry">In SLIDERS mode, click a tile and slide the whole row or column in various directions.</div>
+            </div>
+            <div class="legend-section">
+                <h3>Buttons / Leaderboard Saving</h3>
+                <div class="legend-entry"><strong>NEW GAME:</strong> Start a new game from scratch.</div>
+                <div class="legend-entry"><strong>SUBMIT SCORE:</strong> Submit your score on the leaderboard and start a new game.</div>
+                <div class="legend-entry"><strong>DISCARD GAME:</strong> Reset the game without submitting your score.</div>
+                <div class="legend-entry"><strong>SIMPLE:</strong> Classic mode - swap gems, no time limit.</div>
+                <div class="legend-entry"><strong>TIMED:</strong> Swap gems within a 5-minute limit.</div>
+                <div class="legend-entry"><strong>EXPLOSIONS:</strong> Matching gems may turn explosive, also random bombs appear also clearing rows/columns.</div>
+                <div class="legend-entry"><strong>SLIDERS:</strong> Slide entire rows or columns to match gems.</div>
+            </div>
+            <div class="legend-section">
+                <h3>Additional Info</h3>
+                <div class="legend-entry"><strong>Multiplier:</strong> Make matches within 5 seconds to increase your score multiplier.</div>
+                <div class="legend-entry">Multiplier Circle fills with water gradually as you build the multiplier.</div>
+                <div class="legend-entry"><strong>Explosive Gems:</strong> In EXPLOSIONS mode, look for the bomb - these gems clear additional tiles.</div>
+                <div class="legend-entry">Score 10 points per gem match, multiplied by your current multiplier.</div>
+                <div class="legend-entry"><strong>Settings:</strong> Can adjust music and sounds in the settings.</div>
+            </div>
+        </div>
+        <div class="game-container">
+            <div class="game-content">
+                <div class="bomb-container"></div>
+                <div class="sidebar">
+                  <div class="title">Block Master</div>
+                  <div id="score">SCORE<br />00000000</div>
+                  <div id="timer">TIME<br />00:00</div>
+                  <button class="button" id="newGameBtn">NEW GAME</button>
+                  <button class="button" id="simpleBtn">SIMPLE</button>
+                  <button class="button" id="timedBtn">TIMED</button>
+                  <button class="button" id="explosionsBtn">EXPLOSIONS</button>
+                  <button class="button" id="slidersBtn">SLIDERS</button>
+                  <canvas id="upgradeCanvas" width="100" height="100" class="upgrade-circle"></canvas>
+                  <div id="bonusMultiplier">Multiplier: x1</div>
+                  <br>
+                  <button class="button" id="endGameBtn">SUBMIT SCORE</button>
+                  <button class="button" id="discardGameBtn">DISCARD GAME</button>
+              </div>
+                </div>
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
+                <div class="leaderboard">
+                    <div class="leaderboard-title">Leaderboard</div>
+                    <div class="legend-section">
+                        <h3>Simple</h3>
+                        <div id="simple-leaderboard"></div>
+                    </div>
+                    <div class="legend-section">
+                        <h3>Timed</h3>
+                        <div id="timed-leaderboard"></div>
+                    </div>
+                    <div class="legend-section">
+                        <h3>Explosions</h3>
+                        <div id="explosions-leaderboard"></div>
+                    </div>
+                    <div class="legend-section">
+                        <h3>Sliders</h3>
+                        <div id="sliders-leaderboard"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="scoreSubmitModal" class="modal">
+                <div class="modal-content">
+                    <h2>Game Over!</h2>
+                    <p id="modalScore">Your score: 0</p>
+                    <p>Enter your name for the leaderboard:</p>
+                    <input type="text" id="playerNameInput" maxlength="16" placeholder="Name (max 16 chars)">
+                    <p id="nameError" class="error-message"></p>
+                    <div class="modal-buttons">
+                        <button id="submitNameBtn" class="button">Submit</button>
+                        <button id="anonymousBtn" class="button">Anonymous</button>
+                        <button id="discardBtn" class="button">Discard</button>
+                    </div>
+                    <p class="modal-info">Allowed: 16 Characters, a-z, A-Z, 0-9, -, _ (no spaces)</p>
+                </div>
+            </div>
+            <div id="customAlertModal" class="modal">
+                <div class="modal-content">
+                    <h2 class="alert-title">Notification</h2>
+                    <p id="customAlertMessage">Message goes here</p>
+                    <div class="modal-buttons">
+                        <button id="customAlertOkBtn" class="button">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-info info-section">
+        <div class="info-item">
+            <a href="https://github.com/ItsChasesHub" target="_blank">
+                <i class="fas fa-laptop-code"></i> Created by: ItsChasesHub
+            </a>
+        </div>
+        <div class="info-item">
+            <a href="https://github.com/ItsChasesHub/BlockMasterOnline" target="_blank">
+                <i class="fab fa-github"></i> GitHub - Game Development & Source
+            </a>
+        </div>
+        <div class="info-item">
+            <a href="https://trello.com/b/ORKX4nno/blockmasteronline" target="_blank">
+                <i class="fab fa-trello"></i> Trello - Game Development, Bug & Fix Tracking
+            </a>
+        </div>
+        <div class="info-item">
+            <span>
+                <i class="fab fa-bitcoin"></i> Bitcoin Donations (Only if you feel like supporting the creator)
+            </span>
+            <div class="address-container">
+                <span class="copy-instruction">Click Address to Copy</span>
+                <span class="bitcoin-address" data-address="1Ffv3XzG8nnTRd76poff6b5b593VZNzACJ">
+                    1Ffv3XzG8nnTRd76poff6b5b593VZNzACJ
+                </span>
+            </div>
+        </div>
+        <div class="info-item">
+            <span>
+                <i class="fab fa-ethereum"></i> Ethereum Donations (Only if you feel like supporting the creator)
+            </span>
+            <div class="address-container">
+                <span class="copy-instruction">Click Address to Copy</span>
+                <span class="ethereum-address" data-address="0x850564A34c0Eb953f98DC7068781aF1755904B08">
+                    0x850564A34c0Eb953f98DC7068781aF1755904B08
+                </span>
+            </div>
+        </div>
+    </div>
+    <script src="gem-game-core.js"></script>
+    <script src="simple-mode.js"></script>
+    <script src="timed-mode.js"></script>
+    <script src="explosions-mode.js"></script>
+    <script src="sliders-mode.js"></script>
     <script src="blockmastercopy.js"></script>
-  </body>
+    <script src="gem-game-mechanics.js"></script>
+</body>
 </html>

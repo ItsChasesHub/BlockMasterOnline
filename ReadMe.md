@@ -4,6 +4,6 @@ Will have working Multiplayer Leadersboards, Middleware to prevent spam, and oth
 
 # 2025 Senior Project
 
-Includes Middleware for Rate Limit, SQL Injection Sanitizing, Regex Restrictions for Names, API Endpoint Proxying and More!
+Includes Middleware for Rate Limit, SQL Injection Sanitizing, Regex Restrictions for Names, API Endpoint Proxying, Fallbacks for Offline Debugging, and More!
 
-Ultimate test of knowledge
+Ultimate test of knowledge (As of 4/5/2025 Roughly around 2.8k Lines of Code)

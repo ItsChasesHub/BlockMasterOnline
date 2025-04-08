@@ -5,7 +5,7 @@ const ScoreSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        maxlength: 32,
+        maxlength: 16,
         validate: {
             validator: function(value) {
                 /* Ensures that a name is a string and contains only allowed characters (alphanumeric, hyphens, underscores) for SQL Injection Preventions */
@@ -18,7 +18,7 @@ const ScoreSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 0,
-        max: 2000000000
+        max: 2147483647
     },
     mode: {
         type: String,

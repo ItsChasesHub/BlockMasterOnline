@@ -4,7 +4,7 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    background-color: #3d3d3d;
+    background-color: #161616;
     font-family: Arial, sans-serif;
     color: white;
     overflow-y: auto;
@@ -13,12 +13,11 @@ body {
 
 .game-wrapper {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* width: 100%; 
-    max-width: 980px; */
+    position: relative;
+    flex-direction: row;
+    align-items: stretch;
     margin: 0 auto;
-    padding: 1% 0;
+    padding: 8px;
 }
 
 .game-container {
@@ -28,7 +27,65 @@ body {
     border-radius: 15px;
     padding: 10px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-    width: 1100px;
+}
+
+.game-legend {
+    width: 250px;
+    height: 775px;
+    padding: 20px;
+    background-color: #333;
+    border: 5px solid #37d4a7;
+    border-radius: 15px;
+    margin-right: 10px;
+    overflow-y: auto;
+}
+
+.game-legend::-webkit-scrollbar {
+    width: 0 !important;
+    background: transparent !important;
+}
+
+.game-legend {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.game-content {
+    display: flex;
+    flex: 1;
+}
+
+.legend-title {
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+    text-align: center;
+    animation: rainbow 5s infinite;
+}
+
+.legend-section {
+    margin-bottom: 15px;
+}
+
+.legend-section h3 {
+    font-size: 16px;
+    margin: 0 0 5px 0;
+    color: #37d4a7;
+}
+
+.legend-entry {
+    background-color: #818181;
+    padding: 5px;
+    margin: 3px 0;
+    border-radius: 5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    font-size: 14px;
+    text-align: left;
+}
+
+.legend-entry strong {
+    color: #37d4a7;
 }
 
 .sidebar {
@@ -88,7 +145,8 @@ body {
     margin: 5px 0;
     border: none;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 13px;
+    font-weight: bolder;
     cursor: pointer;
     width: 100%;
     text-align: center;
@@ -147,12 +205,13 @@ canvas {
 }
 
 .leaderboard {
-    width: 300px;
+    width: 450px;
     padding: 20px;
     background-color: #333;
     border-radius: 0 10px 10px 0;
     display: flex;
     flex-direction: column;
+    text-align: center;
 }
 
 .leaderboard-title {
@@ -171,8 +230,8 @@ canvas {
 .leaderboard-section h3 {
     font-size: 16px;
     margin: 0 0 5px 0;
-    text-align: center;
     color: #37d4a7;
+    text-align: center;
 }
 
 .leaderboard-entry {
@@ -197,6 +256,16 @@ canvas {
     align-items: center;
     flex-direction: column;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    font-weight: bold;
+    margin: 10px auto;
+}
+
+.top-info {
+    margin-top: 1%;
+}
+
+.bottom-info {
+    margin-bottom: 0;
 }
 
 .info-item {
@@ -263,4 +332,523 @@ canvas {
 
 .fab {
     font-size: 20px;
+}
+
+.bomb-container {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+    width: 600px;
+    height: 600px;
+}
+
+.bomb-icon {
+    position: absolute;
+    color: white;
+    font-size: 24px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    transition: top 0.1s ease;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #2a2a2a;
+    border: 5px solid #37d4a7;
+    border-radius: 15px;
+    padding: 20px;
+    width: 300px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.modal-content h2 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #37d4a7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content p {
+    font-size: 16px;
+    margin: 5px 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+#playerNameInput {
+    width: 80%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 2px solid #37d4a7;
+    border-radius: 5px;
+    background-color: #cecece;
+    color: #414141;
+    font-size: 14px;
+    text-align: center;
+}
+
+#playerNameInput:focus {
+    outline: none;
+    border-color: #ffffff;
+}
+
+.error-message {
+    color: #ff5555;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-buttons .button {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.modal-info {
+    font-size: 12px;
+    color: #cccccc;
+    margin-top: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.alert-title {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #37d4a7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: rainbow 5s infinite;
+}
+
+#customAlertMessage {
+    font-size: 16px;
+    margin: 10px 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.settings-icon {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1001;
+    cursor: pointer;
+}
+
+.settings-icon .fa-gear {
+    font-size: 24px;
+    color: #37d4a7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.settings-icon .fa-gear:hover {
+    transform: rotate(90deg);
+}
+
+.settings-title {
+    font-size: 24px;
+    margin: 0 0 15px 0;
+    color: #37d4a7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: rainbow 5s infinite;
+}
+
+.settings-section {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.settings-section h3 {
+    font-size: 16px;
+    margin: 0 0 5px 0;
+    color: #37d4a7;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.settings-section select {
+    width: 100%;
+    max-width: 200px;
+    padding: 8px;
+    border: 2px solid #37d4a7;
+    border-radius: 5px;
+    background-color: #818181;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.settings-section select:focus {
+    outline: none;
+    border-color: #ffffff;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 5px 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #818181;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #37d4a7;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.volume-control {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    width: 100%;
+    max-width: 200px;
+}
+
+.volume-control label {
+    font-size: 14px;
+    color: #37d4a7;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    margin-bottom: 5px;
+}
+
+.settings-section .button {
+    width: 100%;
+    max-width: 200px;
+    margin: 5px 0; 
+    padding: 8px;
+    font-size: 14px;
+}
+
+input[type="range"] {
+    width: 100%; 
+    max-width: 150px;
+    background: #818181;
+    border-radius: 5px;
+    height: 8px;
+    outline: none;
+    appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #37d4a7;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #37d4a7;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    body {
+        align-items: stretch;
+        padding: 0;
+    }
+
+    .game-wrapper {
+        flex-direction: column;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .game-container {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        margin: 1.2%;
+    }
+
+    .game-legend {
+        width: 100%;
+        max-width: 1090px;
+        height: 400px;
+        margin: 10px auto;
+        padding: 15px;
+        background-color: #2a2a2a;
+        border: 5px solid #37d4a7;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .game-content {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-radius: 0;
+        padding: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .sidebar .title {
+        width: 100%;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .sidebar #score,
+    .sidebar #timer,
+    .sidebar #bonusMultiplier {
+        width: auto;
+        flex: 1 1 30%;
+        margin: 5px;
+        font-size: 16px;
+        padding: 5px;
+    }
+
+    .sidebar .button {
+        width: auto;
+        flex: 1 1 30%;
+        margin: 5px;
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .sidebar .upgrade-circle {
+        width: 60px;
+        height: 60px;
+        font-size: 12px;
+        margin: 10px;
+    }
+
+    canvas {
+        width: 100% !important;
+        max-width: 375px;
+        height: auto !important;
+        aspect-ratio: 1 / 1;
+        border-radius: 5px;
+    }
+
+    .bomb-container {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    .leaderboard {
+        width: 100%;
+        border-radius: 0;
+        padding: 10px;
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .leaderboard-title {
+        font-size: 18px;
+    }
+
+    .leaderboard-section h3 {
+        font-size: 14px;
+    }
+
+    .leaderboard-entry {
+        font-size: 12px;
+    }
+
+    .game-legend .legend-title {
+        font-size: 18px;
+    }
+
+    .game-legend .legend-section h3 {
+        font-size: 14px;
+    }
+
+    .game-legend .legend-entry {
+        font-size: 12px;
+    }
+
+    .info-section {
+        width: 100%;
+        margin: 10px auto;
+    }
+
+    .info-item {
+        font-size: 14px;
+    }
+
+    .info-item a,
+    .bitcoin-address,
+    .ethereum-address {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .address-container {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .copy-instruction {
+        font-size: 12px;
+    }
+
+    .modal-content {
+        width: 80%;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .modal-content h2 {
+        font-size: 20px;
+    }
+
+    .modal-content p {
+        font-size: 14px;
+    }
+
+    #playerNameInput {
+        width: 90%;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .error-message {
+        font-size: 12px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-buttons .button {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .modal-info {
+        font-size: 10px;
+    }
+
+    .alert-title {
+        font-size: 20px;
+    }
+
+    #customAlertMessage {
+        font-size: 14px;
+    }
+
+    .settings-title {
+        font-size: 20px;
+    }
+
+    .settings-section {
+        align-items: center;
+    }
+
+    .settings-section h3 {
+        font-size: 14px;
+    }
+
+    .settings-section select {
+        font-size: 12px;
+        padding: 6px;
+        max-width: 180px;
+    }
+
+    .switch {
+        width: 50px;
+        height: 28px;
+    }
+
+    .slider:before {
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+    }
+
+    .volume-control {
+        max-width: 180px;
+    }
+
+    .volume-control label {
+        font-size: 12px;
+    }
+
+    input[type="range"] {
+        max-width: 130px;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(22px);
+    }
+
+    .settings-section .button {
+        max-width: 180px;
+        font-size: 12px;
+        padding: 6px;
+    }
 }
