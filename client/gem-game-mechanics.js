@@ -15,6 +15,7 @@ class GameController {
         this.backgroundMusic.loop = false;
         this.backgroundMusic.volume = 0.5;
         this.isMusicPlaying = true;
+        this.wasMusicPlaying = false;
 
         this.handleSongEnd = () => {
             console.log("Song ended, moving to next song");
@@ -35,6 +36,23 @@ class GameController {
         this.startLeaderboardPolling();
         this.animate();
         this.playMusic();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                console.log("Page hidden, pausing music...");
+                this.wasMusicPlaying = this.isMusicPlaying && !this.backgroundMusic.paused;
+                if (this.isMusicPlaying && !this.backgroundMusic.paused) {
+                    this.backgroundMusic.pause();
+                }
+            } else if (document.visibilityState === 'visible') {
+                console.log("Page visible, resuming music if it was playing...");
+                if (this.isMusicPlaying && this.wasMusicPlaying) {
+                    this.backgroundMusic.play().catch(error => {
+                        console.error("Error resuming background music:", error);
+                    });
+                }
+            }
+        });
 
         const playMusicOnInteraction = () => {
             if (this.isMusicPlaying) {
@@ -246,7 +264,7 @@ class GameController {
     }
 
     playMatchSound() {
-        if (this.isSoundEnabled) {
+        if (this.isSoundEnabled && document.visibilityState === 'visible') {
             this.matchSound.currentTime = 0;
             this.matchSound.play().catch(error => {
                 console.error("Error playing match sound:", error);
