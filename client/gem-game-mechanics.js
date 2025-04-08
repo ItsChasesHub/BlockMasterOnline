@@ -8,7 +8,9 @@ class GameController {
         this.leaderboardPollInterval = null;
         this.playlist = [
             'sunsetcafe.mp3',
-            'tokyocafe.mp3'
+            'tokyocafe.mp3',
+            'oceanbreeze.mp3',
+            'musicchill.mp3'
         ];
         this.currentSongIndex = 0;
         this.backgroundMusic = new Audio(this.playlist[this.currentSongIndex]);
@@ -192,6 +194,10 @@ class GameController {
             nextSongBtn.addEventListener("click", () => {
                 console.log("Next song button clicked, current index:", this.currentSongIndex);
                 this.nextSong();
+                this.highlightButton("nextSongBtn");
+                setTimeout(() => {
+                    nextSongBtn.classList.remove("active");
+                }, 1000);
             });
         }
 
