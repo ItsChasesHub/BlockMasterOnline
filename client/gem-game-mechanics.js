@@ -20,7 +20,6 @@ class GameController {
         this.wasMusicPlaying = false;
 
         this.handleSongEnd = () => {
-            console.log("Song ended, moving to next song");
             this.nextSong();
         };
         this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
@@ -41,13 +40,11 @@ class GameController {
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
-                console.log("Page hidden, pausing music...");
                 this.wasMusicPlaying = this.isMusicPlaying && !this.backgroundMusic.paused;
                 if (this.isMusicPlaying && !this.backgroundMusic.paused) {
                     this.backgroundMusic.pause();
                 }
             } else if (document.visibilityState === 'visible') {
-                console.log("Page visible, resuming music if it was playing...");
                 if (this.isMusicPlaying && this.wasMusicPlaying) {
                     this.backgroundMusic.play().catch(error => {
                         console.error("Error resuming background music:", error);
@@ -98,7 +95,6 @@ class GameController {
             const btn = document.getElementById(id);
             if (btn) {
                 btn.addEventListener("click", () => {
-                    console.log(`Button ${id} clicked`);
                     handler();
                     this.highlightButton(id);
                 });
@@ -111,7 +107,6 @@ class GameController {
     }
 
     highlightButton(buttonId) {
-        console.log("Highlighting button:", buttonId);
         const modeButtons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
         const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn"];
         const targetBtn = document.getElementById(buttonId);
@@ -158,19 +153,16 @@ class GameController {
         
         blockDesignSelect.addEventListener("change", (e) => {
             const design = e.target.value;
-            console.log(`Block design changed to: ${design}`);
             this.updateBlockDesign(design);
         });
         
         blockColorSelect.addEventListener("change", (e) => {
             const color = e.target.value;
-            console.log(`Block color changed to: ${color}`);
             this.updateBlockColor(color);
         });
         
         musicToggle.addEventListener("change", (e) => {
             const enabled = e.target.checked;
-            console.log(`Music ${enabled ? "enabled" : "disabled"}`);
             this.toggleMusic(enabled);
         });
     
@@ -185,7 +177,6 @@ class GameController {
     
         soundToggle.addEventListener("change", (e) => {
             const enabled = e.target.checked;
-            console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
             this.toggleSound(enabled);
         });
     
@@ -200,7 +191,6 @@ class GameController {
     
         if (nextSongBtn) {
             nextSongBtn.addEventListener("click", () => {
-                console.log("Next song button clicked, current index:", this.currentSongIndex);
                 this.nextSong();
                 this.highlightButton("nextSongBtn");
                 setTimeout(() => {
@@ -235,7 +225,6 @@ class GameController {
 
     playMusic() {
         if (this.isMusicPlaying) {
-            console.log("Playing music:", this.playlist[this.currentSongIndex]);
             this.backgroundMusic.play().catch(error => {
                 console.error("Error playing background music:", error);
             });
@@ -244,7 +233,6 @@ class GameController {
 
     setMusicVolume(volume) {
         this.backgroundMusic.volume = volume;
-        console.log(`Music volume set to: ${volume}`);
     }
 
     nextSong() {
@@ -254,14 +242,11 @@ class GameController {
         this.backgroundMusic.removeEventListener('ended', this.handleSongEnd);
 
         this.currentSongIndex = (this.currentSongIndex + 1) % this.playlist.length;
-        console.log("New song index:", this.currentSongIndex);
 
         if (this.currentSongIndex === 0) {
-            console.log("Reached end of playlist, restarting from the beginning");
         }
 
         this.backgroundMusic.src = this.playlist[this.currentSongIndex];
-        console.log(`Switching to song: ${this.playlist[this.currentSongIndex]}`);
 
         this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
 
@@ -274,7 +259,6 @@ class GameController {
 
     toggleSound(enabled) {
         this.isSoundEnabled = enabled;
-        console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
     }
 
     playMatchSound() {
@@ -288,7 +272,6 @@ class GameController {
 
     setSoundVolume(volume) {
         this.matchSound.volume = volume;
-        console.log(`Sound volume set to: ${volume}`);
     }
 
     setMode(mode) {
@@ -440,12 +423,10 @@ class GameController {
     }
 
     async fetchLeaderboard() {
-        console.log("Fetching leaderboard data...");
         try {
             const response = await fetch('/proxy/fetch-scores');
             if (!response.ok) throw new Error(`Failed to fetch leaderboard: ${response.status}`);
             const scores = await response.json();
-            console.log("Leaderboard data received:", scores);
             this.updateLeaderboardDisplay(scores);
         } catch (err) {
             console.error('Error fetching leaderboard:', err.message);
@@ -462,7 +443,6 @@ class GameController {
                 body: JSON.stringify({ name, score, mode })
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
-            console.log(`Score submitted: ${name}, ${score}, ${mode}`);
             await this.fetchLeaderboard();
             this.showCustomAlert('Score submitted successfully!');
         } catch (err) {
@@ -576,7 +556,6 @@ class GameController {
     }
 
     endGameWithName() {
-        console.log("Ending game (manual end)...");
         this.currentMode.stopTimer?.();
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
@@ -650,7 +629,6 @@ class GameController {
     }
 
     discardGame() {
-        console.log("Discarding game...");
         this.currentMode.stopTimer?.();
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
