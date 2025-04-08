@@ -243,9 +243,6 @@ class GameController {
 
         this.currentSongIndex = (this.currentSongIndex + 1) % this.playlist.length;
 
-        if (this.currentSongIndex === 0) {
-        }
-
         this.backgroundMusic.src = this.playlist[this.currentSongIndex];
 
         this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
@@ -496,6 +493,7 @@ class GameController {
     startLeaderboardPolling() {
         this.stopLeaderboardPolling();
         console.log("Starting leaderboard polling...");
+        this.fetchLeaderboard();
         this.leaderboardPollInterval = setInterval(() => {
             console.log("Polling for leaderboard updates...");
             this.fetchLeaderboard();
@@ -562,6 +560,7 @@ class GameController {
 
         if (this.currentMode.score <= 0) {
             this.startNewGame(this.currentMode.gameMode);
+            this.startLeaderboardPolling();
             return;
         }
 
@@ -592,6 +591,7 @@ class GameController {
                 this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
                 modal.style.display = "none";
                 this.startNewGame(this.currentMode.gameMode);
+                this.startLeaderboardPolling();
             } else {
                 const validation = this.validateName(playerName);
                 if (validation.valid) {
@@ -599,6 +599,7 @@ class GameController {
                     this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode);
                     modal.style.display = "none";
                     this.startNewGame(this.currentMode.gameMode);
+                    this.startLeaderboardPolling();
                 } else {
                     console.log("Name validation failed:", validation.message);
                     errorDisplay.textContent = validation.message;
@@ -612,6 +613,7 @@ class GameController {
             this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
             modal.style.display = "none";
             this.startNewGame(this.currentMode.gameMode);
+            this.startLeaderboardPolling();
         };
         discardBtn.onclick = () => {
             console.log("User chose to discard the game.");
@@ -633,6 +635,7 @@ class GameController {
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
         this.startNewGame(this.currentMode.gameMode);
+        this.startLeaderboardPolling();
     }
 }
 
