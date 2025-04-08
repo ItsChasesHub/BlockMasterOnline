@@ -147,43 +147,40 @@ class GameController {
         const soundToggle = document.getElementById("soundToggle");
         const soundVolume = document.getElementById("soundVolume");
         const nextSongBtn = document.getElementById("nextSongBtn");
-    
+        
         settingsBtn.addEventListener("click", () => {
             settingsModal.style.display = settingsModal.style.display === "flex" ? "none" : "flex";
         });
-    
+        
         closeBtn.addEventListener("click", () => {
             settingsModal.style.display = "none";
         });
-    
+        
         blockDesignSelect.addEventListener("change", (e) => {
             const design = e.target.value;
             console.log(`Block design changed to: ${design}`);
             this.updateBlockDesign(design);
         });
-    
+        
         blockColorSelect.addEventListener("change", (e) => {
             const color = e.target.value;
             console.log(`Block color changed to: ${color}`);
             this.updateBlockColor(color);
         });
-    
+        
         musicToggle.addEventListener("change", (e) => {
             const enabled = e.target.checked;
             console.log(`Music ${enabled ? "enabled" : "disabled"}`);
             this.toggleMusic(enabled);
         });
-
-        const updateMusicVolume = (value) => {
-            const volume = value / 100;
-            this.setMusicVolume(volume);
-        };
+    
         musicVolume.addEventListener("input", (e) => {
-            updateMusicVolume(e.target.value);
+            const volume = e.target.value / 100;
+            this.setMusicVolume(volume);
         });
-        musicVolume.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            updateMusicVolume(musicVolume.value);
+        musicVolume.addEventListener("change", (e) => {
+            const volume = e.target.value / 100;
+            this.setMusicVolume(volume);
         });
     
         soundToggle.addEventListener("change", (e) => {
@@ -191,19 +188,16 @@ class GameController {
             console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
             this.toggleSound(enabled);
         });
-
-        const updateSoundVolume = (value) => {
-            const volume = value / 100;
-            this.setSoundVolume(volume);
-        };
+    
         soundVolume.addEventListener("input", (e) => {
-            updateSoundVolume(e.target.value);
+            const volume = e.target.value / 100;
+            this.setSoundVolume(volume);
         });
-        soundVolume.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            updateSoundVolume(soundVolume.value);
+        soundVolume.addEventListener("change", (e) => {
+            const volume = e.target.value / 100;
+            this.setSoundVolume(volume);
         });
-
+    
         if (nextSongBtn) {
             nextSongBtn.addEventListener("click", () => {
                 console.log("Next song button clicked, current index:", this.currentSongIndex);
@@ -214,7 +208,7 @@ class GameController {
                 }, 1000);
             });
         }
-
+    
         musicToggle.checked = this.isMusicPlaying;
         musicVolume.value = this.backgroundMusic.volume * 100;
         soundToggle.checked = this.isSoundEnabled;
