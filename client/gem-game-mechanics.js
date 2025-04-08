@@ -174,9 +174,16 @@ class GameController {
             this.toggleMusic(enabled);
         });
 
-        musicVolume.addEventListener("input", (e) => {
-            const volume = e.target.value / 100;
+        const updateMusicVolume = (value) => {
+            const volume = value / 100;
             this.setMusicVolume(volume);
+        };
+        musicVolume.addEventListener("input", (e) => {
+            updateMusicVolume(e.target.value);
+        });
+        musicVolume.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            updateMusicVolume(musicVolume.value);
         });
     
         soundToggle.addEventListener("change", (e) => {
@@ -185,9 +192,16 @@ class GameController {
             this.toggleSound(enabled);
         });
 
-        soundVolume.addEventListener("input", (e) => {
-            const volume = e.target.value / 100;
+        const updateSoundVolume = (value) => {
+            const volume = value / 100;
             this.setSoundVolume(volume);
+        };
+        soundVolume.addEventListener("input", (e) => {
+            updateSoundVolume(e.target.value);
+        });
+        soundVolume.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            updateSoundVolume(soundVolume.value);
         });
 
         if (nextSongBtn) {
