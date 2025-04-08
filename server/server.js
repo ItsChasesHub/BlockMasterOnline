@@ -5,6 +5,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const sanitize = require('mongo-sanitize');
+const axios = require('axios');
 
 require('dotenv').config();
 
@@ -17,8 +18,6 @@ app.use(express.static(path.join(__dirname, '../client')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
-
-app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.use(cors());
 app.use(express.json());
@@ -36,6 +35,8 @@ console.log('SCORE_FETCH_ENDPOINT:', process.env.SCORE_FETCH_ENDPOINT);
 console.log('MONGO_COLLECTION_NAME:', process.env.MONGO_COLLECTION_NAME);
 console.log('PORT:', process.env.PORT);
 console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
+console.log('TELEGRAM_BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN ? 'Set' : 'Not set');
+console.log('TELEGRAM_CHAT_ID:', process.env.TELEGRAM_CHAT_ID ? 'Set' : 'Not set');
 
 if (!process.env.MONGO_URI) {
   throw new Error('MONGO_URI is not defined. Please set it in Render environment variables.');
@@ -46,6 +47,8 @@ if (!process.env.MONGO_COLLECTION_NAME) {
 if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
+if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN is not defined.'); 
+if (!process.env.TELEGRAM_CHAT_ID) throw new Error('TELEGRAM_CHAT_ID is not defined.'); 
 
 const PORT = process.env.PORT || 3000;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -56,6 +59,20 @@ const authenticate = (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
   }
   next();
+};
+
+const sendTelegramNotification = async (message) => {
+  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(url, {
+      chat_id: process.env.TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'Markdown',
+    });
+    console.log('Telegram notification sent:', message);
+  } catch (err) {
+    console.error('Error sending Telegram notification:', err.message);
+  }
 };
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -81,11 +98,11 @@ app.post('/proxy/submit-score', [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
-    .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
+    .isLength({ max: 16 }).withMessage('Name must be at most 16 characters')
     .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
     .customSanitizer(value => sanitize(value)),
   body('score')
-    .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
+    .isInt({ min: 0, max: 2147483647 }).withMessage('Score must be an integer between 0 and 2,147,483,647'),
   body('mode')
     .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
@@ -137,11 +154,11 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
-    .isLength({ max: 32 }).withMessage('Name must be at most 32 characters')
+    .isLength({ max: 16 }).withMessage('Name must be at most 16 characters')
     .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Name can only contain alphanumeric characters, hyphens, and underscores')
     .customSanitizer(value => sanitize(value)),
   body('score')
-    .isInt({ min: 0, max: 2000000000 }).withMessage('Score must be an integer between 0 and 2,000,000,000'),
+    .isInt({ min: 0, max: 2147483647 }).withMessage('Score must be an integer between 0 and 2,147,483,647'),
   body('mode')
     .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
@@ -160,6 +177,10 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
     const newScore = new Score({ name, score, mode });
     const savedScore = await newScore.save();
     console.log('Score saved:', savedScore);
+
+    const message = `New leaderboard entry!\n*Name:* ${name}\n*Score:* ${score}\n*Mode:* ${mode}`;
+    await sendTelegramNotification(message);
+
     const responseData = savedScore.toObject();
     delete responseData.__v;
     res.status(201).json(responseData);
