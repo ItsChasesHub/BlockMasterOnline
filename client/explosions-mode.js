@@ -143,6 +143,9 @@ class ExplosionsMode extends GemGameCore {
             this.fillEmptySpaces();
             this.isAnimating = false;
         }, hasExplosionEffect ? 1000 : 500);
+        if (matches.length > 0) {
+            this.gameController.playMatchSound();
+        }
     }
 
     drawGem(x, y, gem) {

@@ -19,16 +19,12 @@
                 <h3>Block Design</h3>
                 <select id="blockDesignSelect">
                     <option value="default">Default</option>
-                    <option value="rounded">Rounded</option>
-                    <option value="pixel">Pixelated</option>
                 </select>
             </div>
             <div class="settings-section">
                 <h3>Block Color</h3>
                 <select id="blockColorSelect">
                     <option value="classic">Classic</option>
-                    <option value="pastel">Pastel</option>
-                    <option value="neon">Neon</option>
                 </select>
             </div>
             <div class="settings-section">
@@ -37,6 +33,11 @@
                     <input type="checkbox" id="musicToggle" checked>
                     <span class="slider round"></span>
                 </label>
+                <div class="volume-control">
+                    <label for="musicVolume">Volume:</label>
+                    <input type="range" id="musicVolume" min="0" max="100" value="50">
+                </div>
+                <button id="nextSongBtn" class="button">Next Song</button>
             </div>
             <div class="settings-section">
                 <h3>Sound Effects</h3>
@@ -44,13 +45,17 @@
                     <input type="checkbox" id="soundToggle" checked>
                     <span class="slider round"></span>
                 </label>
+                <div class="volume-control">
+                    <label for="soundVolume">Volume:</label>
+                    <input type="range" id="soundVolume" min="0" max="100" value="50">
+                </div>
             </div>
             <div class="modal-buttons">
                 <button id="settingsCloseBtn" class="button">Close</button>
             </div>
         </div>
     </div>
-    <div class="top-info info-section">v4.66.34 -- If you cannot see the full game and info card! <span style="color: #FF0000;">Looking for game Sponsors!</span></div>
+    <div class="top-info info-section">v4.67.34 -- If you cannot see the full game and info card! <span style="color: #FF0000;">Looking for game Sponsors!</span></div>
     <div class="game-wrapper">
         <div class="game-legend">
             <div class="legend-title">Game Legend</div>

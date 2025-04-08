@@ -58,6 +58,9 @@ class SimpleMode extends GemGameCore {
         this.updateScoreDisplay();
         this.updateBonusDisplay();
         this.fillEmptySpaces();
+        if (matches.length > 0) {
+            this.gameController.playMatchSound();
+        }
     }
 
     drawGem(x, y, gem) {

@@ -6,6 +6,26 @@ class GameController {
         this.maxMultiplier = 20;
         this.lastWaterLevel = -1;
         this.leaderboardPollInterval = null;
+        this.playlist = [
+            'sunsetcafe.mp3',
+            'tokyocafe.mp3'
+        ];
+        this.currentSongIndex = 0;
+        this.backgroundMusic = new Audio(this.playlist[this.currentSongIndex]);
+        this.backgroundMusic.loop = false;
+        this.backgroundMusic.volume = 0.5;
+        this.isMusicPlaying = true;
+
+        this.handleSongEnd = () => {
+            console.log("Song ended, moving to next song");
+            this.nextSong();
+        };
+        this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
+
+        this.matchSound = new Audio('uipop.mp3');
+        this.matchSound.volume = 0.5;
+        this.isSoundEnabled = true;
+
         this.setupUpgradeCanvas();
         this.setupButtons();
         this.setupSettings();
@@ -14,6 +34,19 @@ class GameController {
         this.fetchLeaderboard();
         this.startLeaderboardPolling();
         this.animate();
+        this.playMusic();
+
+        const playMusicOnInteraction = () => {
+            if (this.isMusicPlaying) {
+                this.backgroundMusic.play().catch(error => {
+                    console.error("Error playing background music on interaction:", error);
+                });
+            }
+            document.removeEventListener('click', playMusicOnInteraction);
+            document.removeEventListener('touchstart', playMusicOnInteraction);
+        };
+        document.addEventListener('click', playMusicOnInteraction);
+        document.addEventListener('touchstart', playMusicOnInteraction);
     }
 
     setupUpgradeCanvas() {
@@ -90,7 +123,10 @@ class GameController {
         const blockDesignSelect = document.getElementById("blockDesignSelect");
         const blockColorSelect = document.getElementById("blockColorSelect");
         const musicToggle = document.getElementById("musicToggle");
+        const musicVolume = document.getElementById("musicVolume");
         const soundToggle = document.getElementById("soundToggle");
+        const soundVolume = document.getElementById("soundVolume");
+        const nextSongBtn = document.getElementById("nextSongBtn");
     
         settingsBtn.addEventListener("click", () => {
             settingsModal.style.display = settingsModal.style.display === "flex" ? "none" : "flex";
@@ -117,28 +153,110 @@ class GameController {
             console.log(`Music ${enabled ? "enabled" : "disabled"}`);
             this.toggleMusic(enabled);
         });
+
+        musicVolume.addEventListener("input", (e) => {
+            const volume = e.target.value / 100;
+            this.setMusicVolume(volume);
+        });
     
         soundToggle.addEventListener("change", (e) => {
             const enabled = e.target.checked;
             console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
             this.toggleSound(enabled);
         });
+
+        soundVolume.addEventListener("input", (e) => {
+            const volume = e.target.value / 100;
+            this.setSoundVolume(volume);
+        });
+
+        if (nextSongBtn) {
+            nextSongBtn.addEventListener("click", () => {
+                console.log("Next song button clicked, current index:", this.currentSongIndex);
+                this.nextSong();
+            });
+        }
+
+        musicToggle.checked = this.isMusicPlaying;
+        musicVolume.value = this.backgroundMusic.volume * 100;
+        soundToggle.checked = this.isSoundEnabled;
+        soundVolume.value = this.matchSound.volume * 100;
     }
 
     updateBlockDesign(design) {
-        /* Placeholder: Implement logic to change block design, need time to design it all out the way I want */
+        /* Placeholder: Implement logic to change block design */
     }
 
     updateBlockColor(color) {
-        /* Placeholder: Implement logic to change block colors, need time to design it all out the way I want */
+        /* Placeholder: Implement logic to change block colors */
     }
 
     toggleMusic(enabled) {
-        /* Placeholder: Implement logic to enable/disable music, need time to find good music for game */
+        this.isMusicPlaying = enabled;
+        if (enabled) {
+            this.playMusic();
+        } else {
+            this.backgroundMusic.pause();
+            this.backgroundMusic.currentTime = 0;
+        }
+    }
+
+    playMusic() {
+        if (this.isMusicPlaying) {
+            console.log("Playing music:", this.playlist[this.currentSongIndex]);
+            this.backgroundMusic.play().catch(error => {
+                console.error("Error playing background music:", error);
+            });
+        }
+    }
+
+    setMusicVolume(volume) {
+        this.backgroundMusic.volume = volume;
+        console.log(`Music volume set to: ${volume}`);
+    }
+
+    nextSong() {
+        this.backgroundMusic.pause();
+        this.backgroundMusic.currentTime = 0;
+
+        this.backgroundMusic.removeEventListener('ended', this.handleSongEnd);
+
+        this.currentSongIndex = (this.currentSongIndex + 1) % this.playlist.length;
+        console.log("New song index:", this.currentSongIndex);
+
+        if (this.currentSongIndex === 0) {
+            console.log("Reached end of playlist, restarting from the beginning");
+        }
+
+        this.backgroundMusic.src = this.playlist[this.currentSongIndex];
+        console.log(`Switching to song: ${this.playlist[this.currentSongIndex]}`);
+
+        this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
+
+        if (this.isMusicPlaying) {
+            this.backgroundMusic.play().catch(error => {
+                console.error("Error playing next song:", error);
+            });
+        }
     }
 
     toggleSound(enabled) {
-        /* Placeholder: Implement logic to enable/disable sound effects, need time to find good sounds for the game */
+        this.isSoundEnabled = enabled;
+        console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
+    }
+
+    playMatchSound() {
+        if (this.isSoundEnabled) {
+            this.matchSound.currentTime = 0;
+            this.matchSound.play().catch(error => {
+                console.error("Error playing match sound:", error);
+            });
+        }
+    }
+
+    setSoundVolume(volume) {
+        this.matchSound.volume = volume;
+        console.log(`Sound volume set to: ${volume}`);
     }
 
     setMode(mode) {
@@ -163,32 +281,38 @@ class GameController {
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
                     this.currentMode = new SimpleMode();
                     this.currentMode.setupEventListeners();
+                    this.currentMode.gameController = this;
                     break;
                 case "TIMED":
                     if (typeof TimedMode === "undefined") throw new Error("TimedMode is not defined");
                     this.currentMode = new TimedMode();
                     this.currentMode.setupEventListeners();
+                    this.currentMode.gameController = this;
                     break;
                 case "EXPLOSIONS":
                     if (typeof ExplosionsMode === "undefined") throw new Error("ExplosionsMode is not defined");
                     this.currentMode = new ExplosionsMode();
                     this.currentMode.setupEventListeners();
+                    this.currentMode.gameController = this;
                     break;
                 case "SLIDERS":
                     if (typeof SlidersMode === "undefined") throw new Error("SlidersMode is not defined");
                     this.currentMode = new SlidersMode();
                     this.currentMode.dragHandler.setupDragListeners();
+                    this.currentMode.gameController = this;
                     break;
                 default:
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
                     this.currentMode = new SimpleMode();
                     this.currentMode.setupEventListeners();
+                    this.currentMode.gameController = this;
             }
         } catch (error) {
             console.error(`Failed to set mode ${mode}: ${error.message}`);
             this.showCustomAlert(`Error: ${error.message}. Falling back to Simple mode.`);
             this.currentMode = new SimpleMode();
             this.currentMode.setupEventListeners();
+            this.currentMode.gameController = this;
         }
 
         this.startNewGame(mode);

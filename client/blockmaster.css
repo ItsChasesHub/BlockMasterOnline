@@ -474,6 +474,9 @@ canvas {
 
 .settings-section {
     margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .settings-section h3 {
@@ -485,6 +488,7 @@ canvas {
 
 .settings-section select {
     width: 100%;
+    max-width: 200px;
     padding: 8px;
     border: 2px solid #37d4a7;
     border-radius: 5px;
@@ -493,6 +497,7 @@ canvas {
     font-size: 14px;
     text-align: center;
     cursor: pointer;
+    margin-bottom: 10px;
 }
 
 .settings-section select:focus {
@@ -505,6 +510,7 @@ canvas {
     display: inline-block;
     width: 60px;
     height: 34px;
+    margin: 5px 0;
 }
 
 .switch input {
@@ -543,6 +549,58 @@ input:checked + .slider {
 
 input:checked + .slider:before {
     transform: translateX(26px);
+}
+
+.volume-control {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    width: 100%;
+    max-width: 200px;
+}
+
+.volume-control label {
+    font-size: 14px;
+    color: #37d4a7;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    margin-bottom: 5px;
+}
+
+.settings-section .button {
+    width: 100%;
+    max-width: 200px;
+    margin: 5px 0; 
+    padding: 8px;
+    font-size: 14px;
+}
+
+input[type="range"] {
+    width: 100%; 
+    max-width: 150px;
+    background: #818181;
+    border-radius: 5px;
+    height: 8px;
+    outline: none;
+    appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #37d4a7;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #37d4a7;
+    border-radius: 50%;
+    cursor: pointer;
 }
 
 @media (max-width: 768px) {
@@ -746,6 +804,10 @@ input:checked + .slider:before {
         font-size: 20px;
     }
 
+    .settings-section {
+        align-items: center;
+    }
+
     .settings-section h3 {
         font-size: 14px;
     }
@@ -753,6 +815,7 @@ input:checked + .slider:before {
     .settings-section select {
         font-size: 12px;
         padding: 6px;
+        max-width: 180px;
     }
 
     .switch {
@@ -767,7 +830,25 @@ input:checked + .slider:before {
         bottom: 4px;
     }
 
+    .volume-control {
+        max-width: 180px;
+    }
+
+    .volume-control label {
+        font-size: 12px;
+    }
+
+    input[type="range"] {
+        max-width: 130px;
+    }
+
     input:checked + .slider:before {
         transform: translateX(22px);
+    }
+
+    .settings-section .button {
+        max-width: 180px;
+        font-size: 12px;
+        padding: 6px;
     }
 }
