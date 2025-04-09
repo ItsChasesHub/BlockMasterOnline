@@ -23,14 +23,31 @@ class GemGameCore {
         this.selectedTile = null;
         this.selectedGem = null;
         this.isAnimating = false;
+        this.isGameActive = true;
 
         this.gemColors = [
-            "#8B0000", "#006400", "#00008B", 
+            "#8B0000", "#006400", "#00008B",
             "#DAA520", "#4B0082", "#8B4513"
         ];
 
         this.gemStyles = this.gemColors.map((color) => this.createGemGradient(color));
         this.grid = this.createGrid();
+    }
+
+    reset() {
+        this.score = 0;
+        this.grid = this.createGrid();
+        this.selectedTile = null;
+        this.selectedGem = null;
+        this.isAnimating = false;
+        this.isGameActive = true;
+        this.timeLeft = 300;
+        this.bonusMultiplier = 1;
+        this.lastMatchTime = null;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.updateScoreDisplay();
+        this.updateTimerDisplay();
+        this.updateBonusDisplay();
     }
 
     createGemGradient(baseColor) {
@@ -120,6 +137,7 @@ class GemGameCore {
 
     findMatches(customGrid = null) {
         const gridToCheck = customGrid || this.grid;
+        if (!gridToCheck) return [];
         const matches = [];
         for (let y = 0; y < this.gridSize; y++) {
             for (let x = 0; x < this.gridSize - 2; x++) {
@@ -150,6 +168,7 @@ class GemGameCore {
     }
 
     fillEmptySpaces() {
+        if (!this.grid) return;
         const columnsToFill = new Set();
         for (let x = 0; x < this.gridSize; x++) {
             let writeIndex = this.gridSize - 1;
@@ -181,6 +200,7 @@ class GemGameCore {
     }
 
     swapGems(x1, y1, x2, y2) {
+        if (!this.grid) return;
         const temp = this.grid[x1][y1];
         this.grid[x1][y1] = this.grid[x2][y2];
         this.grid[x2][y2] = temp;
@@ -191,5 +211,83 @@ class GemGameCore {
 
     isAdjacent(gem1, gem2) {
         return Math.abs(gem1.x - gem2.x) + Math.abs(gem1.y - gem2.y) === 1;
+    }
+
+    drawGem(x, y, gem) {
+        const centerX = x * this.tileSize + this.tileSize / 2;
+        const centerY = y * this.tileSize + this.tileSize / 2 + gem.offsetY;
+
+        const gradient = this.ctx.createLinearGradient(
+            x * this.tileSize, y * this.tileSize,
+            x * this.tileSize + this.tileSize, y * this.tileSize + this.tileSize
+        );
+        gradient.addColorStop(0, gem.style.highlight);
+        gradient.addColorStop(0.5, gem.style.base);
+        gradient.addColorStop(1, gem.style.shadow);
+
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x * this.tileSize + 2, y * this.tileSize + 2 + gem.offsetY,
+            this.tileSize - 6, this.tileSize - 6, 10);
+        this.ctx.fill();
+
+        if (this.selectedGem?.x === x && this.selectedGem?.y === y) {
+            this.ctx.strokeStyle = "rgba(255,255,255,0.7)";
+            this.ctx.lineWidth = 4;
+            this.ctx.stroke();
+        }
+    }
+
+    removeMatches(matches) {
+        const currentTime = Date.now();
+        if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) this.bonusMultiplier += 1;
+        this.lastMatchTime = currentTime;
+
+        matches.forEach(({ x, y }) => {
+            if (this.grid[x][y]) {
+                this.grid[x][y] = null;
+                this.score += 10 * this.bonusMultiplier;
+            }
+        });
+
+        this.updateScoreDisplay();
+        this.updateBonusDisplay();
+        this.fillEmptySpaces();
+        if (matches.length > 0 && this.gameController) {
+            this.gameController.playMatchSound();
+        }
+    }
+
+    animate() {
+        if (!this.isGameActive || !this.grid) return false;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        let isAnimating = false;
+
+        for (let x = 0; x < this.gridSize; x++) {
+            for (let y = 0; y < this.gridSize; y++) {
+                const gem = this.grid[x][y];
+                if (!gem) continue;
+
+                if (gem.offsetY !== gem.targetOffsetY) {
+                    isAnimating = true;
+                    gem.offsetY += (gem.targetOffsetY - gem.offsetY) * 0.3;
+                    if (Math.abs(gem.targetOffsetY - gem.offsetY) < 0.1) gem.offsetY = gem.targetOffsetY;
+                }
+                this.drawGem(x, y, gem);
+            }
+        }
+
+        if (!isAnimating && !this.isAnimating) {
+            this.fillEmptySpaces();
+            const matches = this.findMatches();
+            if (matches.length > 0) this.removeMatches(matches);
+        }
+
+        if (this.lastMatchTime && Date.now() - this.lastMatchTime > 5000 && this.bonusMultiplier > 1) {
+            this.bonusMultiplier = 1;
+            this.updateBonusDisplay();
+        }
+
+        return isAnimating;
     }
 }
