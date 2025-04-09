@@ -20,7 +20,6 @@ class GameController {
         this.wasMusicPlaying = false;
 
         this.handleSongEnd = () => {
-            console.log("Song ended, moving to next song");
             this.nextSong();
         };
         this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
@@ -41,13 +40,11 @@ class GameController {
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
-                console.log("Page hidden, pausing music...");
                 this.wasMusicPlaying = this.isMusicPlaying && !this.backgroundMusic.paused;
                 if (this.isMusicPlaying && !this.backgroundMusic.paused) {
                     this.backgroundMusic.pause();
                 }
             } else if (document.visibilityState === 'visible') {
-                console.log("Page visible, resuming music if it was playing...");
                 if (this.isMusicPlaying && this.wasMusicPlaying) {
                     this.backgroundMusic.play().catch(error => {
                         console.error("Error resuming background music:", error);
@@ -98,7 +95,6 @@ class GameController {
             const btn = document.getElementById(id);
             if (btn) {
                 btn.addEventListener("click", () => {
-                    console.log(`Button ${id} clicked`);
                     handler();
                     this.highlightButton(id);
                 });
@@ -111,7 +107,6 @@ class GameController {
     }
 
     highlightButton(buttonId) {
-        console.log("Highlighting button:", buttonId);
         const modeButtons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
         const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn"];
         const targetBtn = document.getElementById(buttonId);
@@ -158,19 +153,16 @@ class GameController {
         
         blockDesignSelect.addEventListener("change", (e) => {
             const design = e.target.value;
-            console.log(`Block design changed to: ${design}`);
             this.updateBlockDesign(design);
         });
         
         blockColorSelect.addEventListener("change", (e) => {
             const color = e.target.value;
-            console.log(`Block color changed to: ${color}`);
             this.updateBlockColor(color);
         });
         
         musicToggle.addEventListener("change", (e) => {
             const enabled = e.target.checked;
-            console.log(`Music ${enabled ? "enabled" : "disabled"}`);
             this.toggleMusic(enabled);
         });
     
@@ -185,7 +177,6 @@ class GameController {
     
         soundToggle.addEventListener("change", (e) => {
             const enabled = e.target.checked;
-            console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
             this.toggleSound(enabled);
         });
     
@@ -200,7 +191,6 @@ class GameController {
     
         if (nextSongBtn) {
             nextSongBtn.addEventListener("click", () => {
-                console.log("Next song button clicked, current index:", this.currentSongIndex);
                 this.nextSong();
                 this.highlightButton("nextSongBtn");
                 setTimeout(() => {
@@ -235,7 +225,6 @@ class GameController {
 
     playMusic() {
         if (this.isMusicPlaying) {
-            console.log("Playing music:", this.playlist[this.currentSongIndex]);
             this.backgroundMusic.play().catch(error => {
                 console.error("Error playing background music:", error);
             });
@@ -244,7 +233,6 @@ class GameController {
 
     setMusicVolume(volume) {
         this.backgroundMusic.volume = volume;
-        console.log(`Music volume set to: ${volume}`);
     }
 
     nextSong() {
@@ -254,14 +242,8 @@ class GameController {
         this.backgroundMusic.removeEventListener('ended', this.handleSongEnd);
 
         this.currentSongIndex = (this.currentSongIndex + 1) % this.playlist.length;
-        console.log("New song index:", this.currentSongIndex);
-
-        if (this.currentSongIndex === 0) {
-            console.log("Reached end of playlist, restarting from the beginning");
-        }
 
         this.backgroundMusic.src = this.playlist[this.currentSongIndex];
-        console.log(`Switching to song: ${this.playlist[this.currentSongIndex]}`);
 
         this.backgroundMusic.addEventListener('ended', this.handleSongEnd);
 
@@ -274,7 +256,6 @@ class GameController {
 
     toggleSound(enabled) {
         this.isSoundEnabled = enabled;
-        console.log(`Sound effects ${enabled ? "enabled" : "disabled"}`);
     }
 
     playMatchSound() {
@@ -288,7 +269,6 @@ class GameController {
 
     setSoundVolume(volume) {
         this.matchSound.volume = volume;
-        console.log(`Sound volume set to: ${volume}`);
     }
 
     setMode(mode) {
@@ -306,69 +286,81 @@ class GameController {
                 canvas.removeEventListener("touchend", this.currentMode.dragHandler.handleTouchEnd);
             }
             this.currentMode.stopTimer?.();
+            this.currentMode.isAnimating = false;
+            this.currentMode.score = 0;
+            this.currentMode.grid = null;
+            this.currentMode = null;
         }
+
         try {
             switch (mode) {
                 case "SIMPLE":
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
                     this.currentMode = new SimpleMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
                     break;
                 case "TIMED":
                     if (typeof TimedMode === "undefined") throw new Error("TimedMode is not defined");
                     this.currentMode = new TimedMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
                     break;
                 case "EXPLOSIONS":
                     if (typeof ExplosionsMode === "undefined") throw new Error("ExplosionsMode is not defined");
                     this.currentMode = new ExplosionsMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
                     break;
                 case "SLIDERS":
                     if (typeof SlidersMode === "undefined") throw new Error("SlidersMode is not defined");
                     this.currentMode = new SlidersMode();
                     this.currentMode.dragHandler.setupDragListeners();
-                    this.currentMode.gameController = this;
                     break;
                 default:
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
                     this.currentMode = new SimpleMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
             }
+            this.currentMode.gameController = this;
+            this.currentMode.reset();
+            this.currentMode.score = 0;
+            this.currentMode.updateScoreDisplay();
         } catch (error) {
             console.error(`Failed to set mode ${mode}: ${error.message}`);
             this.showCustomAlert(`Error: ${error.message}. Falling back to Simple mode.`);
             this.currentMode = new SimpleMode();
             this.currentMode.setupEventListeners();
             this.currentMode.gameController = this;
+            this.currentMode.reset();
+            this.currentMode.score = 0;
+            this.currentMode.updateScoreDisplay();
         }
 
         this.startNewGame(mode);
     }
 
     startNewGame(mode) {
-        this.currentMode.score = 0;
-        this.currentMode.grid = this.currentMode.createGrid();
-        this.currentMode.selectedGem = null;
-        this.currentMode.selectedTile = null;
-        this.currentMode.isAnimating = false;
-        this.currentMode.timeLeft = 300;
-        this.currentMode.bonusMultiplier = 1;
-        this.currentMode.lastMatchTime = null;
-        this.waterLevel = 0;
-        this.targetWaterLevel = 0;
-        this.lastWaterLevel = -1;
-        this.currentMode.updateScoreDisplay();
-        this.currentMode.updateTimerDisplay();
-        this.currentMode.updateBonusDisplay();
+        if (this.currentMode) {
+            this.currentMode.reset();
+            this.currentMode.score = 0;
+            this.currentMode.grid = this.currentMode.createGrid();
+            this.currentMode.selectedGem = null;
+            this.currentMode.selectedTile = null;
+            this.currentMode.isAnimating = false;
+            this.currentMode.timeLeft = 300;
+            this.currentMode.bonusMultiplier = 1;
+            this.currentMode.lastMatchTime = null;
+            this.waterLevel = 0;
+            this.targetWaterLevel = 0;
+            this.lastWaterLevel = -1;
 
-        const timerElement = document.getElementById("timer");
-        if (timerElement) {
-            timerElement.style.display = mode === "TIMED" ? "block" : "none";
+            this.currentMode.updateScoreDisplay();
+            this.currentMode.updateTimerDisplay();
+            this.currentMode.updateBonusDisplay();
+
+            const timerElement = document.getElementById("timer");
+            if (timerElement) {
+                timerElement.style.display = mode === "TIMED" ? "block" : "none";
+            }
+            this.currentMode.ctx.clearRect(0, 0, this.currentMode.canvas.width, this.currentMode.canvas.height);
         }
     }
 
@@ -440,12 +432,10 @@ class GameController {
     }
 
     async fetchLeaderboard() {
-        console.log("Fetching leaderboard data...");
         try {
             const response = await fetch('/proxy/fetch-scores');
             if (!response.ok) throw new Error(`Failed to fetch leaderboard: ${response.status}`);
             const scores = await response.json();
-            console.log("Leaderboard data received:", scores);
             this.updateLeaderboardDisplay(scores);
         } catch (err) {
             console.error('Error fetching leaderboard:', err.message);
@@ -462,7 +452,6 @@ class GameController {
                 body: JSON.stringify({ name, score, mode })
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
-            console.log(`Score submitted: ${name}, ${score}, ${mode}`);
             await this.fetchLeaderboard();
             this.showCustomAlert('Score submitted successfully!');
         } catch (err) {
@@ -516,6 +505,7 @@ class GameController {
     startLeaderboardPolling() {
         this.stopLeaderboardPolling();
         console.log("Starting leaderboard polling...");
+        this.fetchLeaderboard();
         this.leaderboardPollInterval = setInterval(() => {
             console.log("Polling for leaderboard updates...");
             this.fetchLeaderboard();
@@ -576,13 +566,13 @@ class GameController {
     }
 
     endGameWithName() {
-        console.log("Ending game (manual end)...");
         this.currentMode.stopTimer?.();
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
 
         if (this.currentMode.score <= 0) {
             this.startNewGame(this.currentMode.gameMode);
+            this.startLeaderboardPolling();
             return;
         }
 
@@ -613,6 +603,7 @@ class GameController {
                 this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
                 modal.style.display = "none";
                 this.startNewGame(this.currentMode.gameMode);
+                this.startLeaderboardPolling();
             } else {
                 const validation = this.validateName(playerName);
                 if (validation.valid) {
@@ -620,6 +611,7 @@ class GameController {
                     this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode);
                     modal.style.display = "none";
                     this.startNewGame(this.currentMode.gameMode);
+                    this.startLeaderboardPolling();
                 } else {
                     console.log("Name validation failed:", validation.message);
                     errorDisplay.textContent = validation.message;
@@ -633,6 +625,7 @@ class GameController {
             this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
             modal.style.display = "none";
             this.startNewGame(this.currentMode.gameMode);
+            this.startLeaderboardPolling();
         };
         discardBtn.onclick = () => {
             console.log("User chose to discard the game.");
@@ -650,11 +643,14 @@ class GameController {
     }
 
     discardGame() {
-        console.log("Discarding game...");
         this.currentMode.stopTimer?.();
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
+        this.currentMode.reset();
+        this.currentMode.score = 0;
+        this.currentMode.updateScoreDisplay();
         this.startNewGame(this.currentMode.gameMode);
+        this.startLeaderboardPolling();
     }
 }
 
