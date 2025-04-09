@@ -339,6 +339,7 @@ class GameController {
 
     startNewGame(mode) {
         if (this.currentMode) {
+            this.currentMode.stopTimer?.();
             this.currentMode.reset();
             this.currentMode.score = 0;
             this.currentMode.grid = this.currentMode.createGrid();
@@ -351,11 +352,14 @@ class GameController {
             this.waterLevel = 0;
             this.targetWaterLevel = 0;
             this.lastWaterLevel = -1;
-
             this.currentMode.updateScoreDisplay();
             this.currentMode.updateTimerDisplay();
             this.currentMode.updateBonusDisplay();
-
+    
+            if (mode === "TIMED") {
+                this.currentMode.startTimer();
+            }
+    
             const timerElement = document.getElementById("timer");
             if (timerElement) {
                 timerElement.style.display = mode === "TIMED" ? "block" : "none";

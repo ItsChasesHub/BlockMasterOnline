@@ -48,6 +48,10 @@ class GemGameCore {
         this.updateScoreDisplay();
         this.updateTimerDisplay();
         this.updateBonusDisplay();
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
     }
 
     createGemGradient(baseColor) {
