@@ -286,40 +286,43 @@ class GameController {
                 canvas.removeEventListener("touchend", this.currentMode.dragHandler.handleTouchEnd);
             }
             this.currentMode.stopTimer?.();
+            this.currentMode.isAnimating = false;
+            this.currentMode.score = 0;
+            this.currentMode.grid = null;
+            this.currentMode = null;
         }
+
         try {
             switch (mode) {
                 case "SIMPLE":
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
                     this.currentMode = new SimpleMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
                     break;
                 case "TIMED":
                     if (typeof TimedMode === "undefined") throw new Error("TimedMode is not defined");
                     this.currentMode = new TimedMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
                     break;
                 case "EXPLOSIONS":
                     if (typeof ExplosionsMode === "undefined") throw new Error("ExplosionsMode is not defined");
                     this.currentMode = new ExplosionsMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
                     break;
                 case "SLIDERS":
                     if (typeof SlidersMode === "undefined") throw new Error("SlidersMode is not defined");
                     this.currentMode = new SlidersMode();
                     this.currentMode.dragHandler.setupDragListeners();
-                    this.currentMode.gameController = this;
                     break;
                 default:
                     if (typeof SimpleMode === "undefined") throw new Error("SimpleMode is not defined");
                     this.currentMode = new SimpleMode();
                     this.currentMode.setupEventListeners();
-                    this.currentMode.gameController = this;
             }
+            this.currentMode.gameController = this;
             this.currentMode.reset();
+            this.currentMode.score = 0;
+            this.currentMode.updateScoreDisplay();
         } catch (error) {
             console.error(`Failed to set mode ${mode}: ${error.message}`);
             this.showCustomAlert(`Error: ${error.message}. Falling back to Simple mode.`);
@@ -327,33 +330,38 @@ class GameController {
             this.currentMode.setupEventListeners();
             this.currentMode.gameController = this;
             this.currentMode.reset();
+            this.currentMode.score = 0;
+            this.currentMode.updateScoreDisplay();
         }
 
         this.startNewGame(mode);
     }
 
     startNewGame(mode) {
-        this.currentMode.reset();
-        this.currentMode.score = 0;
-        this.currentMode.grid = this.currentMode.createGrid();
-        this.currentMode.selectedGem = null;
-        this.currentMode.selectedTile = null;
-        this.currentMode.isAnimating = false;
-        this.currentMode.timeLeft = 300;
-        this.currentMode.bonusMultiplier = 1;
-        this.currentMode.lastMatchTime = null;
-        this.waterLevel = 0;
-        this.targetWaterLevel = 0;
-        this.lastWaterLevel = -1;
-        this.currentMode.updateScoreDisplay();
-        this.currentMode.updateTimerDisplay();
-        this.currentMode.updateBonusDisplay();
+        if (this.currentMode) {
+            this.currentMode.reset();
+            this.currentMode.score = 0;
+            this.currentMode.grid = this.currentMode.createGrid();
+            this.currentMode.selectedGem = null;
+            this.currentMode.selectedTile = null;
+            this.currentMode.isAnimating = false;
+            this.currentMode.timeLeft = 300;
+            this.currentMode.bonusMultiplier = 1;
+            this.currentMode.lastMatchTime = null;
+            this.waterLevel = 0;
+            this.targetWaterLevel = 0;
+            this.lastWaterLevel = -1;
 
-        const timerElement = document.getElementById("timer");
-        if (timerElement) {
-            timerElement.style.display = mode === "TIMED" ? "block" : "none";
+            this.currentMode.updateScoreDisplay();
+            this.currentMode.updateTimerDisplay();
+            this.currentMode.updateBonusDisplay();
+
+            const timerElement = document.getElementById("timer");
+            if (timerElement) {
+                timerElement.style.display = mode === "TIMED" ? "block" : "none";
+            }
+            this.currentMode.ctx.clearRect(0, 0, this.currentMode.canvas.width, this.currentMode.canvas.height);
         }
-        this.currentMode.ctx.clearRect(0, 0, this.currentMode.canvas.width, this.currentMode.canvas.height);
     }
 
     animate() {
@@ -640,6 +648,7 @@ class GameController {
         this.stopWaterAnimation();
         this.currentMode.reset();
         this.currentMode.score = 0;
+        this.currentMode.updateScoreDisplay();
         this.startNewGame(this.currentMode.gameMode);
         this.startLeaderboardPolling();
     }
