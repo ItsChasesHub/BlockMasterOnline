@@ -2,6 +2,7 @@ class TimedMode extends GemGameCore {
     constructor() {
         super();
         this.gameMode = "TIMED";
+        this.timeLeft = 300;
         this.setupEventListeners();
         this.updateScoreDisplay();
         this.updateTimerDisplay();
@@ -12,6 +13,12 @@ class TimedMode extends GemGameCore {
 
     setupEventListeners() {
         this.canvas.addEventListener("click", this.handleClick.bind(this));
+    }
+
+    reset() {
+        super.reset();
+        this.timeLeft = 300;
+        this.startTimer();
     }
 
     handleClick(event) {
@@ -126,12 +133,14 @@ class TimedMode extends GemGameCore {
     startTimer() {
         if (this.timerInterval) clearInterval(this.timerInterval);
         this.timerInterval = setInterval(() => {
-            if (this.timeLeft > 0) {
+            if (this.timeLeft > 0 && this.isGameActive) {
                 this.timeLeft -= 1;
                 this.updateTimerDisplay();
-            } else {
+            } else if (this.timeLeft <= 0) {
                 clearInterval(this.timerInterval);
                 this.timerInterval = null;
+                this.isGameActive = false;
+                this.gameController.endGameWithName();
             }
         }, 1000);
     }
