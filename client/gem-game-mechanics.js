@@ -88,7 +88,8 @@ class GameController {
             explosionsBtn: () => this.setMode("EXPLOSIONS"),
             slidersBtn: () => this.setMode("SLIDERS"),
             endGameBtn: () => this.endGameWithName(),
-            discardGameBtn: () => this.discardGame()
+            discardGameBtn: () => this.discardGame(),
+            settingsSidebarBtn: () => this.toggleSettingsModal()
         };
 
         for (const [id, handler] of Object.entries(buttons)) {
@@ -106,9 +107,14 @@ class GameController {
         this.highlightButton("simpleBtn");
     }
 
+    toggleSettingsModal() {
+        const settingsModal = document.getElementById("settingsModal");
+        settingsModal.style.display = settingsModal.style.display === "flex" ? "none" : "flex";
+    }
+
     highlightButton(buttonId) {
         const modeButtons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
-        const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn"];
+        const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn", "settingsSidebarBtn"];
         const targetBtn = document.getElementById(buttonId);
     
         if (!targetBtn) {
@@ -133,6 +139,7 @@ class GameController {
 
     setupSettings() {
         const settingsBtn = document.getElementById("settingsBtn");
+        const settingsSidebarBtn = document.getElementById("settingsSidebarBtn");
         const settingsModal = document.getElementById("settingsModal");
         const closeBtn = document.getElementById("settingsCloseBtn");
         const blockDesignSelect = document.getElementById("blockDesignSelect");
