@@ -118,7 +118,7 @@ class GemGameCore {
         const scoreElement = document.getElementById("score");
         if (scoreElement) {
             const roundedScore = Math.round(this.score);
-            scoreElement.innerHTML = `SCORE<br>${roundedScore.toString().padStart(8, "0")}`;
+            scoreElement.innerHTML = `SCORE<br>${roundedScore.toString().padStart(10, "0")}`;
         }
     }
 
