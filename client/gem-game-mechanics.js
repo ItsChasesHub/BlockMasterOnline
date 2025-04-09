@@ -319,18 +319,21 @@ class GameController {
                     this.currentMode.setupEventListeners();
                     this.currentMode.gameController = this;
             }
+            this.currentMode.reset();
         } catch (error) {
             console.error(`Failed to set mode ${mode}: ${error.message}`);
             this.showCustomAlert(`Error: ${error.message}. Falling back to Simple mode.`);
             this.currentMode = new SimpleMode();
             this.currentMode.setupEventListeners();
             this.currentMode.gameController = this;
+            this.currentMode.reset();
         }
 
         this.startNewGame(mode);
     }
 
     startNewGame(mode) {
+        this.currentMode.reset();
         this.currentMode.score = 0;
         this.currentMode.grid = this.currentMode.createGrid();
         this.currentMode.selectedGem = null;
@@ -350,6 +353,7 @@ class GameController {
         if (timerElement) {
             timerElement.style.display = mode === "TIMED" ? "block" : "none";
         }
+        this.currentMode.ctx.clearRect(0, 0, this.currentMode.canvas.width, this.currentMode.canvas.height);
     }
 
     animate() {
@@ -634,6 +638,8 @@ class GameController {
         this.currentMode.stopTimer?.();
         this.stopLeaderboardPolling();
         this.stopWaterAnimation();
+        this.currentMode.reset();
+        this.currentMode.score = 0;
         this.startNewGame(this.currentMode.gameMode);
         this.startLeaderboardPolling();
     }

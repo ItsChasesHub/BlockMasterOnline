@@ -33,6 +33,21 @@ class GemGameCore {
         this.grid = this.createGrid();
     }
 
+    reset() {
+        this.score = 0;
+        this.grid = this.createGrid();
+        this.selectedTile = null;
+        this.selectedGem = null;
+        this.isAnimating = false;
+        this.timeLeft = 300;
+        this.bonusMultiplier = 1;
+        this.lastMatchTime = null;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.updateScoreDisplay();
+        this.updateTimerDisplay();
+        this.updateBonusDisplay();
+    }
+
     createGemGradient(baseColor) {
         return {
             base: baseColor,
