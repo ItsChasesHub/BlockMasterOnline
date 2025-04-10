@@ -5,6 +5,8 @@ body {
     align-items: center;
     min-height: 100vh;
     background-image: linear-gradient( rgb(107, 107, 107) , rgb(48, 48, 48));
+    background-size: 100% 100%;
+    height: 100%;
     font-family: Arial, sans-serif;
     color: white;
     overflow-y: auto;
@@ -609,6 +611,8 @@ input[type="range"]::-moz-range-thumb {
         align-items: stretch;
         padding: 0;
         background-image: linear-gradient( rgb(107, 107, 107) , rgb(48, 48, 48));
+        background-size: 100% 100%;
+        height: 100%;
     }
 
     .game-wrapper {
