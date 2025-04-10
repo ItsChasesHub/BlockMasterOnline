@@ -4,7 +4,7 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    background-color: #161616;
+    background-image: linear-gradient( rgb(107, 107, 107) , rgb(48, 48, 48));
     font-family: Arial, sans-serif;
     color: white;
     overflow-y: auto;
