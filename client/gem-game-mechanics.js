@@ -509,7 +509,8 @@ class GameController {
                 (scores[mode] || []).forEach((entry, index) => {
                     const div = document.createElement("div");
                     div.className = "leaderboard-entry";
-                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>x${entry.multiplier}</span><span>${entry.score}</span>`;
+                    const displayMultiplier = entry.multiplier !== undefined ? entry.multiplier : 1;
+                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>x${displayMultiplier}</span><span>${entry.score}</span>`;
                     list.appendChild(div);
                 });
                 if ((scores[mode] || []).length === 0) {
