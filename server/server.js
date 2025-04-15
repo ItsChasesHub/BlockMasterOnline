@@ -103,8 +103,6 @@ app.post('/proxy/submit-score', [
     .customSanitizer(value => sanitize(value)),
   body('score')
     .isInt({ min: 0, max: 2147483647 }).withMessage('Score must be an integer between 0 and 2,147,483,647'),
-  body('multiplier')
-    .isInt({ min: 1, max: 9999 }).withMessage('Highest multiplier must be an integer between 1 and 9999'),
   body('mode')
     .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
@@ -161,8 +159,6 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
     .customSanitizer(value => sanitize(value)),
   body('score')
     .isInt({ min: 0, max: 2147483647 }).withMessage('Score must be an integer between 0 and 2,147,483,647'),
-  body('multiplier')
-    .isInt({ min: 1, max: 9999 }).withMessage('Highest multiplier must be an integer between 1 and 9999'),
   body('mode')
     .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
 ], async (req, res) => {
@@ -175,14 +171,14 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, score, multiplier, mode } = req.body;
+  const { name, score, mode } = req.body;
 
   try {
-    const newScore = new Score({ name, score, multiplier, mode });
+    const newScore = new Score({ name, score, mode });
     const savedScore = await newScore.save();
     console.log('Score saved:', savedScore);
 
-    const message = `New leaderboard entry!\n*Name:* ${name}\n*Score:* ${score}\n*Multiplier:* ${multiplier}\n*Mode:* ${mode}`;
+    const message = `New leaderboard entry!\n*Name:* ${name}\n*Score:* ${score}\n*Mode:* ${mode}`;
     await sendTelegramNotification(message);
 
     const responseData = savedScore.toObject();
@@ -200,19 +196,19 @@ app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
     const simpleScores = await Score.find({ mode: 'SIMPLE' })
       .sort({ score: -1 })
       .limit(5)
-      .select('name score multiplier');
+      .select('-__v');
     const timedScores = await Score.find({ mode: 'TIMED' })
       .sort({ score: -1 })
       .limit(5)
-      .select('name score multiplier');
+      .select('-__v');
     const explosionsScores = await Score.find({ mode: 'EXPLOSIONS' })
       .sort({ score: -1 })
       .limit(5)
-      .select('name score multiplier');
+      .select('-__v');
     const slidersScores = await Score.find({ mode: 'SLIDERS' })
       .sort({ score: -1 })
       .limit(5)
-      .select('name score multiplier');
+      .select('-__v');
 
     console.log('Fetched scores:', { simple: simpleScores, timed: timedScores, explosions: explosionsScores, sliders: slidersScores });
     res.json({

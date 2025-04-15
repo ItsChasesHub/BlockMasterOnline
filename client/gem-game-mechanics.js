@@ -457,11 +457,10 @@ class GameController {
 
     async submitScore(name, score, mode) {
         try {
-            const multiplier = Math.round(this.currentMode.multiplier);
             const response = await fetch('/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, score, multiplier, mode })
+                body: JSON.stringify({ name, score, mode })
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
             await this.fetchLeaderboard();
@@ -501,7 +500,7 @@ class GameController {
                 (scores[mode] || []).forEach((entry, index) => {
                     const div = document.createElement("div");
                     div.className = "leaderboard-entry";
-                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>x${entry.multiplier}</span><span>${entry.score}</span>`;
+                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score}</span>`;
                     list.appendChild(div);
                 });
                 if ((scores[mode] || []).length === 0) {

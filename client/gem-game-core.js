@@ -15,8 +15,6 @@ class GemGameCore {
         this.gridSize = 8;
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
-        this.multiplier = 1;
-        this.highestMultiplier = 1;
         this.gameMode = "SIMPLE";
         this.timeLeft = 300;
         this.timerInterval = null;
@@ -38,8 +36,6 @@ class GemGameCore {
 
     reset() {
         this.score = 0;
-        this.multiplier = 1;
-        this.highestMultiplier = 1;
         this.grid = this.createGrid();
         this.selectedTile = null;
         this.selectedGem = null;
@@ -248,16 +244,7 @@ class GemGameCore {
 
     removeMatches(matches) {
         const currentTime = Date.now();
-        if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) {
-            this.bonusMultiplier += 1;
-        } else {
-            this.bonusMultiplier = Math.max(1, this.bonusMultiplier - 1); // Decrease if no recent matches
-        }
-        this.multiplier = this.bonusMultiplier;
-        if (this.multiplier > this.highestMultiplier) {
-            this.highestMultiplier = this.multiplier;
-            console.log("New highest multiplier:", this.highestMultiplier);
-        }
+        if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) this.bonusMultiplier += 1;
         this.lastMatchTime = currentTime;
 
         matches.forEach(({ x, y }) => {
@@ -273,9 +260,8 @@ class GemGameCore {
         if (matches.length > 0 && this.gameController) {
             this.gameController.playMatchSound();
         }
-        console.log("After removeMatches - multiplier:", this.multiplier, "highestMultiplier:", this.highestMultiplier);
     }
-        
+
     animate() {
         if (!this.isGameActive || !this.grid) return false;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
