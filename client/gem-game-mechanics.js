@@ -4,6 +4,7 @@ class GameController {
         this.waterLevel = 0;
         this.targetWaterLevel = 0;
         this.maxMultiplier = 20;
+        this.highestMultiplier = 1;
         this.lastWaterLevel = -1;
         this.leaderboardPollInterval = null;
         this.playlist = [
@@ -64,6 +65,13 @@ class GameController {
         };
         document.addEventListener('click', playMusicOnInteraction);
         document.addEventListener('touchstart', playMusicOnInteraction);
+    }
+
+    updateHighestMultiplier(multiplier) {
+        if (multiplier > this.highestMultiplier) {
+            this.highestMultiplier = multiplier;
+            console.log(`New highest multiplier: x${this.highestMultiplier}`);
+        }
     }
 
     setupUpgradeCanvas() {
@@ -355,6 +363,7 @@ class GameController {
             this.currentMode.isAnimating = false;
             this.currentMode.timeLeft = 300;
             this.currentMode.bonusMultiplier = 1;
+            this.highestMultiplier = 1;
             this.currentMode.lastMatchTime = null;
             this.waterLevel = 0;
             this.targetWaterLevel = 0;
@@ -455,12 +464,12 @@ class GameController {
         }
     }
 
-    async submitScore(name, score, mode) {
+    async submitScore(name, score, mode, multiplier) {
         try {
             const response = await fetch('/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, score, mode })
+                body: JSON.stringify({ name, score, mode, multiplier })
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
             await this.fetchLeaderboard();
@@ -500,13 +509,13 @@ class GameController {
                 (scores[mode] || []).forEach((entry, index) => {
                     const div = document.createElement("div");
                     div.className = "leaderboard-entry";
-                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score}</span>`;
+                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>x${entry.multiplier}</span><span>${entry.score}</span>`;
                     list.appendChild(div);
                 });
                 if ((scores[mode] || []).length === 0) {
                     const div = document.createElement("div");
                     div.className = "leaderboard-entry";
-                    div.innerHTML = "<span>No scores yet</span>";
+                    div.innerHTML = "<span>No scores yet</span><span>-</span><span>-</span>";
                     list.appendChild(div);
                 }
             }
@@ -595,7 +604,7 @@ class GameController {
         const anonymousBtn = document.getElementById("anonymousBtn");
         const discardBtn = document.getElementById("discardBtn");
 
-        scoreDisplay.textContent = `Your score: ${Math.round(this.currentMode.score)}`;
+        scoreDisplay.textContent = `Your score: ${Math.round(this.currentMode.score)} (Max Multiplier: x${Math.round(this.highestMultiplier)})`;
         nameInput.value = "";
         errorDisplay.textContent = "";
         modal.style.display = "flex";
@@ -611,7 +620,7 @@ class GameController {
 
             if (playerName === "") {
                 console.log("Name was empty, submitting as Anonymous");
-                this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
+                this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode, Math.round(this.highestMultiplier));
                 modal.style.display = "none";
                 this.startNewGame(this.currentMode.gameMode);
                 this.startLeaderboardPolling();
@@ -619,7 +628,7 @@ class GameController {
                 const validation = this.validateName(playerName);
                 if (validation.valid) {
                     console.log("Name is valid:", playerName);
-                    this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode);
+                    this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode, Math.round(this.highestMultiplier));
                     modal.style.display = "none";
                     this.startNewGame(this.currentMode.gameMode);
                     this.startLeaderboardPolling();
@@ -633,7 +642,7 @@ class GameController {
         submitBtn.onclick = submitScoreHandler;
         anonymousBtn.onclick = () => {
             console.log("Submitting as Anonymous");
-            this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
+            this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode, Math.round(this.highestMultiplier));
             modal.style.display = "none";
             this.startNewGame(this.currentMode.gameMode);
             this.startLeaderboardPolling();
@@ -659,6 +668,7 @@ class GameController {
         this.stopWaterAnimation();
         this.currentMode.reset();
         this.currentMode.score = 0;
+        this.highestMultiplier = 1;
         this.currentMode.updateScoreDisplay();
         this.startNewGame(this.currentMode.gameMode);
         this.startLeaderboardPolling();

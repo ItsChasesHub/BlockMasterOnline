@@ -248,6 +248,20 @@ canvas {
     font-size: 14px;
 }
 
+.leaderboard-entry span:nth-child(1) {
+    flex: 2;
+    text-align: left;
+}
+
+.leaderboard-entry span:nth-child(2) {
+    text-align: center;
+}
+
+.leaderboard-entry span:nth-child(3) {
+    flex: 2;
+    text-align: right;
+}
+
 .info-section {
     width: 1090px;
     background-color: #2a2a2a;
@@ -721,6 +735,19 @@ input[type="range"]::-moz-range-thumb {
 
     .leaderboard-entry {
         font-size: 12px;
+        padding: 4px;
+    }
+
+    .leaderboard-entry span:nth-child(1) {
+        flex: 2;
+    }
+
+    .leaderboard-entry span:nth-child(2) {
+        flex: 1;
+    }
+
+    .leaderboard-entry span:nth-child(3) {
+        flex: 2;
     }
 
     .game-legend .legend-title {
