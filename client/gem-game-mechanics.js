@@ -70,7 +70,6 @@ class GameController {
     updateHighestMultiplier(multiplier) {
         if (multiplier > this.highestMultiplier) {
             this.highestMultiplier = multiplier;
-            console.log(`New highest multiplier: x${this.highestMultiplier}`);
         }
     }
 
