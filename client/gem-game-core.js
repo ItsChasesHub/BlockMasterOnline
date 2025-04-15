@@ -247,8 +247,8 @@ class GemGameCore {
     removeMatches(matches) {
         const currentTime = Date.now();
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) this.bonusMultiplier += 1;
-        if (this.bonusMultiplier > this.highestMultiplier) {
-            this.highestMultiplier = this.bonusMultiplier;
+        if (this.bonusMultiplier > this.multiplier) {
+            this.multiplier = this.bonusMultiplier;
         }
         this.lastMatchTime = currentTime;
 

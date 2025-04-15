@@ -175,10 +175,10 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, score, mode } = req.body;
+  const { name, score, multiplier, mode } = req.body;
 
   try {
-    const newScore = new Score({ name, score, mode });
+    const newScore = new Score({ name, score, multiplier, mode });
     const savedScore = await newScore.save();
     console.log('Score saved:', savedScore);
 
