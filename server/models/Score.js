@@ -20,6 +20,13 @@ const ScoreSchema = new mongoose.Schema({
         min: 0,
         max: 2147483647
     },
+    multiplier: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 9999,
+        default: 1
+    },
     mode: {
         type: String,
         required: true,

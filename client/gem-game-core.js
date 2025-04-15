@@ -15,6 +15,7 @@ class GemGameCore {
         this.gridSize = 8;
         this.tileSize = this.canvas.width / this.gridSize;
         this.score = 0;
+        this.multiplier = 1;
         this.gameMode = "SIMPLE";
         this.timeLeft = 300;
         this.timerInterval = null;
@@ -36,6 +37,7 @@ class GemGameCore {
 
     reset() {
         this.score = 0;
+        this.multiplier = 1;
         this.grid = this.createGrid();
         this.selectedTile = null;
         this.selectedGem = null;
@@ -245,6 +247,9 @@ class GemGameCore {
     removeMatches(matches) {
         const currentTime = Date.now();
         if (this.lastMatchTime && currentTime - this.lastMatchTime <= 5000) this.bonusMultiplier += 1;
+        if (this.bonusMultiplier > this.highestMultiplier) {
+            this.highestMultiplier = this.bonusMultiplier;
+        }
         this.lastMatchTime = currentTime;
 
         matches.forEach(({ x, y }) => {
