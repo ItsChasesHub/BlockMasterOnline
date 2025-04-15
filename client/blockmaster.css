@@ -744,7 +744,6 @@ input[type="range"]::-moz-range-thumb {
     }
 
     .leaderboard-entry span:nth-child(2) {
-        flex: 1;
     }
 
     .leaderboard-entry span:nth-child(3) {
