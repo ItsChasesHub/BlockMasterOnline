@@ -3,7 +3,7 @@ class GameController {
         this.currentMode = null;
         this.waterLevel = 0;
         this.targetWaterLevel = 0;
-        this.maxMultiplier = 20;
+        this.maxMultiplier = 9999;
         this.highestMultiplier = 1;
         this.lastWaterLevel = -1;
         this.leaderboardPollInterval = null;
