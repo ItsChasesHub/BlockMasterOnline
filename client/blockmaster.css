@@ -10,7 +10,7 @@ body {
     font-family: Arial, sans-serif;
     color: white;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
 }
 
 .game-wrapper {
