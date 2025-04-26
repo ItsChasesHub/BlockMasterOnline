@@ -23,8 +23,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, /* 15 minutes */
-  max: 100, /* 100 requests per IP */
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again after 15 minutes.'
 }));
 
@@ -47,11 +47,11 @@ if (!process.env.MONGO_COLLECTION_NAME) {
 if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
-if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN is not defined.'); 
-if (!process.env.TELEGRAM_CHAT_ID) throw new Error('TELEGRAM_CHAT_ID is not defined.'); 
+if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN is not defined.');
+if (!process.env.TELEGRAM_CHAT_ID) throw new Error('TELEGRAM_CHAT_ID is not defined.');
 
 const PORT = process.env.PORT || 3000;
-const BASE_URL = `http://localhost:${PORT}`;
+const BASE_URL = process.env.RENDER_EXTERNAL_URL || `https://blockmasteronline.onrender.com`;
 
 const authenticate = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
@@ -95,6 +95,7 @@ const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores'
 
 console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
 console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
+console.log('Using BASE_URL:', BASE_URL);
 
 app.post('/proxy/submit-score', authenticate, [
   body('name')
@@ -150,6 +151,56 @@ app.get('/proxy/fetch-scores', authenticate, async (req, res) => {
     res.status(response.status).json(data);
   } catch (err) {
     console.error('Error in proxy/fetch-scores');
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/client/submit-score', [
+  body('name').isString().trim().isLength({ max: 16 }).matches(/^[a-zA-Z0-9_-]+$/).customSanitizer(sanitize),
+  body('score').isInt({ min: 0, max: 2147483647 }),
+  body('multiplier').isInt({ min: 1, max: 9999 }),
+  body('mode').isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS'])
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.warn('Validation errors in /client/submit-score');
+    return res.status(400).json({ errors: errors.array() });
+  }
+  try {
+    const response = await fetch(`${BASE_URL}${SCORE_SUBMIT_ENDPOINT}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.API_KEY
+      },
+      body: JSON.stringify(req.body)
+    });
+    if (!response.ok) {
+      throw new Error(`Submit score failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error('Error in client/submit-score');
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/client/fetch-scores', async (req, res) => {
+  try {
+    const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.API_KEY
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Fetch scores failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error('Error in client/fetch-scores');
     res.status(500).json({ error: 'Server error' });
   }
 });
