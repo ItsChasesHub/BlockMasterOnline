@@ -456,11 +456,7 @@ class GameController {
 
     async fetchLeaderboard() {
         try {
-            const response = await fetch('/client/fetch-scores', {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await fetch('/proxy/fetch-scores');
             if (!response.ok) throw new Error(`Failed to fetch leaderboard: ${response.status}`);
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -473,7 +469,7 @@ class GameController {
 
     async submitScore(name, score, mode, multiplier) {
         try {
-            const response = await fetch('/client/submit-score', {
+            const response = await fetch('/proxy/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode, multiplier })
