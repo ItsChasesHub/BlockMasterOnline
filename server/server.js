@@ -6,37 +6,66 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const sanitize = require('mongo-sanitize');
 const axios = require('axios');
+const helmet = require('helmet');
 
 require('dotenv').config();
 
 const app = express();
 
-app.set('trust proxy', 'loopback');
+app.set('trust proxy', 1);
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'", 'https://api.telegram.org'],
+      imgSrc: ["'self'", 'data:'],
+      frameAncestors: ["'none'"]
+    }
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  xFrameOptions: { action: 'deny' },
+  xContentTypeOptions: true,
+  xXssProtection: true
+}));
+
+const corsOptions = {
+  origin: [
+    process.env.FRONTEND_URL || 'https://blockmasteronline.onrender.com',
+    'https://blockmasteronline.com'
+  ],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'x-api-key'],
+  credentials: false
+};
+app.use(cors(corsOptions));
+
+const proxyRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  message: 'Too many requests from this IP, please try again after 15 minutes.',
+  onLimitReached: (req) => console.warn(`Rate limit reached for IP: ${req.ip}`)
+});
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50, 
+  message: 'Too many requests from this IP, please try again after 15 minutes.',
+  onLimitReached: (req) => console.warn(`Rate limit reached for IP: ${req.ip}`)
+}));
 
 app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'blockmaster.html'));
 });
 
-app.use(cors());
-app.use(express.json());
-
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, /* 15 minutes */
-  max: 100, /* 100 requests per IP */
-  message: 'Too many requests from this IP, please try again after 15 minutes.'
-}));
-
-console.log('Environment variables loaded:');
-console.log('MONGO_URI:', process.env.MONGO_URI ? process.env.MONGO_URI : 'Not set');
-console.log('SCORE_SUBMIT_ENDPOINT:', process.env.SCORE_SUBMIT_ENDPOINT);
-console.log('SCORE_FETCH_ENDPOINT:', process.env.SCORE_FETCH_ENDPOINT);
-console.log('MONGO_COLLECTION_NAME:', process.env.MONGO_COLLECTION_NAME);
-console.log('PORT:', process.env.PORT);
-console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
-console.log('TELEGRAM_BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN ? 'Set' : 'Not set');
-console.log('TELEGRAM_CHAT_ID:', process.env.TELEGRAM_CHAT_ID ? 'Set' : 'Not set');
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', uptime: process.uptime() });
+});
 
 if (!process.env.MONGO_URI) {
   throw new Error('MONGO_URI is not defined. Please set it in Render environment variables.');
@@ -47,11 +76,33 @@ if (!process.env.MONGO_COLLECTION_NAME) {
 if (!process.env.API_KEY) {
   throw new Error('API_KEY is not defined. Please set it in Render environment variables.');
 }
-if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN is not defined.'); 
-if (!process.env.TELEGRAM_CHAT_ID) throw new Error('TELEGRAM_CHAT_ID is not defined.'); 
+if (!process.env.TELEGRAM_BOT_TOKEN) {
+  throw new Error('TELEGRAM_BOT_TOKEN is not defined.');
+}
+if (!process.env.TELEGRAM_CHAT_ID) {
+  throw new Error('TELEGRAM_CHAT_ID is not defined.');
+}
+
+console.log('Environment variables loaded:');
+console.log('MONGO_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
+console.log('SCORE_SUBMIT_ENDPOINT:', process.env.SCORE_SUBMIT_ENDPOINT || 'Not set');
+console.log('SCORE_FETCH_ENDPOINT:', process.env.SCORE_FETCH_ENDPOINT || 'Not set');
+console.log('MONGO_COLLECTION_NAME:', process.env.MONGO_COLLECTION_NAME || 'Not set');
+console.log('PORT:', process.env.PORT || 'Not set');
+console.log('API_KEY:', process.env.API_KEY ? 'Set' : 'Not set');
+console.log('TELEGRAM_BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN ? 'Set' : 'Not set');
+console.log('TELEGRAM_CHAT_ID:', process.env.TELEGRAM_CHAT_ID ? 'Set' : 'Not set');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'Not set');
+console.log('RENDER_EXTERNAL_URL:', process.env.RENDER_EXTERNAL_URL || 'Not set');
 
 const PORT = process.env.PORT || 3000;
-const BASE_URL = `http://localhost:${PORT}`;
+const BASE_URL = process.env.RENDER_EXTERNAL_URL || 'https://blockmasteronline.onrender.com';
+const SCORE_SUBMIT_ENDPOINT = process.env.SCORE_SUBMIT_ENDPOINT || '/submit-score';
+const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores';
+
+console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
+console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
+console.log('Using BASE_URL:', BASE_URL);
 
 const authenticate = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
@@ -61,24 +112,36 @@ const authenticate = (req, res, next) => {
   next();
 };
 
+const restrictToInternal = (req, res, next) => {
+  const isInternal = req.ip === '127.0.0.1' || req.ip === '::1';
+  if (!isInternal) {
+    return res.status(403).json({ error: 'Forbidden: Direct access not allowed' });
+  }
+  next();
+};
+
 const sendTelegramNotification = async (message) => {
   const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
   try {
-    await axios.post(url, {
+    const response = await axios.post(url, {
       chat_id: process.env.TELEGRAM_CHAT_ID,
       text: message,
-      parse_mode: 'Markdown',
+      parse_mode: 'Markdown'
     });
-    console.log('Telegram notification sent:', message);
+    if (response.data.ok) {
+      console.log('Telegram notification sent:', message);
+    } else {
+      console.error('Telegram API error:', response.data);
+    }
   } catch (err) {
     console.error('Error sending Telegram notification:', err.message);
   }
 };
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000, /* Timeout after 5 seconds */
-  connectTimeoutMS: 10000, /* Timeout connection after 10 seconds */
-  socketTimeoutMS: 45000, /* Close sockets after 45 seconds of inactivity */
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 10000,
+  socketTimeoutMS: 45000
 })
   .then(() => console.log('MongoDB Atlas connected successfully'))
   .catch(err => {
@@ -88,13 +151,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const Score = require('./models/Score');
 
-const SCORE_SUBMIT_ENDPOINT = process.env.SCORE_SUBMIT_ENDPOINT || '/submit-score';
-const SCORE_FETCH_ENDPOINT = process.env.SCORE_FETCH_ENDPOINT || '/fetch-scores';
-
-console.log('Using SCORE_SUBMIT_ENDPOINT:', SCORE_SUBMIT_ENDPOINT);
-console.log('Using SCORE_FETCH_ENDPOINT:', SCORE_FETCH_ENDPOINT);
-
-app.post('/proxy/submit-score', [
+app.post('/proxy/submit-score', proxyRateLimit, authenticate, [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
@@ -106,7 +163,7 @@ app.post('/proxy/submit-score', [
   body('multiplier')
     .isInt({ min: 1, max: 9999 }).withMessage('Multiplier must be an integer between 1 and 9999'),
   body('mode')
-    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
+    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS')
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -124,17 +181,17 @@ app.post('/proxy/submit-score', [
       body: JSON.stringify(req.body)
     });
     if (!response.ok) {
-      throw new Error(`Submit score failed with status ${response.status}: ${await response.text()}`);
+      throw new Error(`Submit score failed with status ${response.status}`);
     }
     const data = await response.json();
     res.status(response.status).json(data);
   } catch (err) {
     console.error('Error in proxy/submit-score:', err.message);
-    res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get('/proxy/fetch-scores', async (req, res) => {
+app.get('/proxy/fetch-scores', proxyRateLimit, authenticate, async (req, res) => {
   try {
     const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
       headers: {
@@ -142,17 +199,17 @@ app.get('/proxy/fetch-scores', async (req, res) => {
       }
     });
     if (!response.ok) {
-      throw new Error(`Fetch scores failed with status ${response.status}: ${await response.text()}`);
+      throw new Error(`Fetch scores failed with status ${response.status}`);
     }
     const data = await response.json();
     res.status(response.status).json(data);
   } catch (err) {
     console.error('Error in proxy/fetch-scores:', err.message);
-    res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
+app.post(SCORE_SUBMIT_ENDPOINT, restrictToInternal, authenticate, [
   body('name')
     .isString().withMessage('Name must be a string')
     .trim()
@@ -164,7 +221,7 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
   body('multiplier')
     .isInt({ min: 1, max: 9999 }).withMessage('Multiplier must be an integer between 1 and 9999'),
   body('mode')
-    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS'),
+    .isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS']).withMessage('Mode must be SIMPLE, TIMED, EXPLOSIONS, or SLIDERS')
 ], async (req, res) => {
   console.log('POST request received at:', SCORE_SUBMIT_ENDPOINT);
   console.log('Request body:', req.body);
@@ -190,11 +247,11 @@ app.post(SCORE_SUBMIT_ENDPOINT, authenticate, [
     res.status(201).json(responseData);
   } catch (err) {
     console.error('Error saving score:', err);
-    res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
+app.get(SCORE_FETCH_ENDPOINT, restrictToInternal, authenticate, async (req, res) => {
   console.log('GET request received at:', SCORE_FETCH_ENDPOINT);
   try {
     const simpleScores = await Score.find({ mode: 'SIMPLE' })
@@ -223,8 +280,18 @@ app.get(SCORE_FETCH_ENDPOINT, authenticate, async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching scores:', err);
-    res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
+});
+
+app.use((err, req, res, next) => {
+  console.error('Unexpected error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.message);
+  process.exit(1);
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
