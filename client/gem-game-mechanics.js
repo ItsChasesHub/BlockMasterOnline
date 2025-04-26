@@ -37,7 +37,6 @@ class GameController {
         this.fetchLeaderboard();
         this.startLeaderboardPolling();
         this.animate();
-        this.playMusic();
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
@@ -55,7 +54,8 @@ class GameController {
         });
 
         const playMusicOnInteraction = () => {
-            if (this.isMusicPlaying) {
+            if (this.isMusicPlaying && !this.backgroundMusic.played.length) {
+                console.log('User interacted, playing music');
                 this.backgroundMusic.play().catch(error => {
                     console.error("Error playing background music on interaction:", error);
                 });
@@ -230,7 +230,11 @@ class GameController {
     toggleMusic(enabled) {
         this.isMusicPlaying = enabled;
         if (enabled) {
-            this.playMusic();
+            if (this.backgroundMusic.played.length) {
+                this.backgroundMusic.play().catch(error => {
+                    console.error("Error playing background music:", error);
+                });
+            }
         } else {
             this.backgroundMusic.pause();
             this.backgroundMusic.currentTime = 0;
@@ -452,7 +456,11 @@ class GameController {
 
     async fetchLeaderboard() {
         try {
-            const response = await fetch('/proxy/fetch-scores');
+            const response = await fetch('/client/fetch-scores', {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error(`Failed to fetch leaderboard: ${response.status}`);
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -465,7 +473,7 @@ class GameController {
 
     async submitScore(name, score, mode, multiplier) {
         try {
-            const response = await fetch('/proxy/submit-score', {
+            const response = await fetch('/client/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, mode, multiplier })

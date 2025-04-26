@@ -19,7 +19,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdns.cloudflare.com'],
       connectSrc: ["'self'", 'https://api.telegram.org'],
       imgSrc: ["'self'", 'data:'],
       frameAncestors: ["'none'"]
@@ -44,14 +44,14 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 const proxyRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100, 
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again after 15 minutes.',
   onLimitReached: (req) => console.warn(`Rate limit reached for IP: ${req.ip}`)
 });
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50, 
+  max: 50,
   message: 'Too many requests from this IP, please try again after 15 minutes.',
   onLimitReached: (req) => console.warn(`Rate limit reached for IP: ${req.ip}`)
 }));
@@ -195,6 +195,7 @@ app.get('/proxy/fetch-scores', proxyRateLimit, authenticate, async (req, res) =>
   try {
     const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
       headers: {
+        'Content-Type': 'application/json',
         'x-api-key': process.env.API_KEY
       }
     });
@@ -205,6 +206,55 @@ app.get('/proxy/fetch-scores', proxyRateLimit, authenticate, async (req, res) =>
     res.status(response.status).json(data);
   } catch (err) {
     console.error('Error in proxy/fetch-scores:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/client/submit-score', proxyRateLimit, [
+  body('name').isString().trim().isLength({ max: 16 }).matches(/^[a-zA-Z0-9_-]+$/).customSanitizer(sanitize),
+  body('score').isInt({ min: 0, max: 2147483647 }),
+  body('multiplier').isInt({ min: 1, max: 9999 }),
+  body('mode').isIn(['SIMPLE', 'TIMED', 'EXPLOSIONS', 'SLIDERS'])
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  try {
+    const response = await fetch(`${BASE_URL}${SCORE_SUBMIT_ENDPOINT}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.API_KEY
+      },
+      body: JSON.stringify(req.body)
+    });
+    if (!response.ok) {
+      throw new Error(`Submit score failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error('Error in client/submit-score:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/client/fetch-scores', proxyRateLimit, async (req, res) => {
+  try {
+    const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.API_KEY
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Fetch scores failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error('Error in client/fetch-scores:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
