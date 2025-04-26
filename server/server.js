@@ -186,7 +186,7 @@ app.post('/client/submit-score', [
   }
 });
 
-app.get('/client/fetch-scores', async (req, res) => {
+app.get('/client/fetch-scores', authenticate, async (req, res) => {
   try {
     const response = await fetch(`${BASE_URL}${SCORE_FETCH_ENDPOINT}`, {
       headers: {
