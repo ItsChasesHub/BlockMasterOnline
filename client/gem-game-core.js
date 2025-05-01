@@ -118,7 +118,7 @@ class GemGameCore {
         const scoreElement = document.getElementById("score");
         if (scoreElement) {
             const roundedScore = Math.round(this.score);
-            scoreElement.innerHTML = `SCORE<br>${roundedScore.toString().padStart(8, "0")}`;
+            scoreElement.innerHTML = `SCORE<br>${roundedScore.toString().padStart(10, "0")}`;
         }
     }
 
@@ -136,6 +136,9 @@ class GemGameCore {
         if (bonusElement) {
             let displayMultiplier = Math.round(this.bonusMultiplier);
             bonusElement.innerHTML = `Multiplier: x${displayMultiplier}`;
+            if (this.gameController) {
+                this.gameController.updateHighestMultiplier(displayMultiplier);
+            }
         }
     }
 
@@ -256,7 +259,6 @@ class GemGameCore {
 
         this.updateScoreDisplay();
         this.updateBonusDisplay();
-        this.fillEmptySpaces();
         if (matches.length > 0 && this.gameController) {
             this.gameController.playMatchSound();
         }

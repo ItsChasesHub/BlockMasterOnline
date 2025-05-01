@@ -4,11 +4,13 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    background-color: #161616;
+    background-image: linear-gradient( rgb(107, 107, 107) , rgb(48, 48, 48));
+    background-size: 100% 100%;
+    height: 100%;
     font-family: Arial, sans-serif;
     color: white;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
 }
 
 .game-wrapper {
@@ -142,7 +144,7 @@ body {
     background-color: #818181;
     color: #ffffff;
     padding: 10px;
-    margin: 5px 0;
+    margin: 3px 0;
     border: none;
     border-radius: 5px;
     font-size: 13px;
@@ -196,6 +198,7 @@ canvas {
 #bonusMultiplier {
     font-size: 16px;
     margin-top: 5px;
+    margin-bottom: 5px;
     background-color: #818181;
     padding: 5px;
     border-radius: 5px;
@@ -205,7 +208,7 @@ canvas {
 }
 
 .leaderboard {
-    width: 450px;
+    width: 600px;
     padding: 20px;
     background-color: #333;
     border-radius: 0 10px 10px 0;
@@ -243,6 +246,20 @@ canvas {
     display: flex;
     justify-content: space-between;
     font-size: 14px;
+}
+
+.leaderboard-entry span:nth-child(1) {
+    flex: 2;
+    text-align: left;
+}
+
+.leaderboard-entry span:nth-child(2) {
+    text-align: center;
+}
+
+.leaderboard-entry span:nth-child(3) {
+    flex: 2;
+    text-align: right;
 }
 
 .info-section {
@@ -607,6 +624,9 @@ input[type="range"]::-moz-range-thumb {
     body {
         align-items: stretch;
         padding: 0;
+        background-image: linear-gradient( rgb(107, 107, 107) , rgb(48, 48, 48));
+        background-size: 100% 100%;
+        height: 100%;
     }
 
     .game-wrapper {
@@ -715,6 +735,19 @@ input[type="range"]::-moz-range-thumb {
 
     .leaderboard-entry {
         font-size: 12px;
+        padding: 4px;
+    }
+
+    .leaderboard-entry span:nth-child(1) {
+        flex: 2;
+    }
+
+    .leaderboard-entry span:nth-child(2) {
+        flex: 1;
+    }
+
+    .leaderboard-entry span:nth-child(3) {
+        flex: 2;
     }
 
     .game-legend .legend-title {
