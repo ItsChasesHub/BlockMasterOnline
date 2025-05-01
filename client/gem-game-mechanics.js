@@ -4,6 +4,7 @@ class GameController {
         this.waterLevel = 0;
         this.targetWaterLevel = 0;
         this.maxMultiplier = 20;
+        this.highestMultiplier = 1;
         this.lastWaterLevel = -1;
         this.leaderboardPollInterval = null;
         this.playlist = [
@@ -36,7 +37,6 @@ class GameController {
         this.fetchLeaderboard();
         this.startLeaderboardPolling();
         this.animate();
-        this.playMusic();
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
@@ -54,7 +54,8 @@ class GameController {
         });
 
         const playMusicOnInteraction = () => {
-            if (this.isMusicPlaying) {
+            if (this.isMusicPlaying && !this.backgroundMusic.played.length) {
+                console.log('User interacted, playing music');
                 this.backgroundMusic.play().catch(error => {
                     console.error("Error playing background music on interaction:", error);
                 });
@@ -64,6 +65,12 @@ class GameController {
         };
         document.addEventListener('click', playMusicOnInteraction);
         document.addEventListener('touchstart', playMusicOnInteraction);
+    }
+
+    updateHighestMultiplier(multiplier) {
+        if (multiplier > this.highestMultiplier) {
+            this.highestMultiplier = multiplier;
+        }
     }
 
     setupUpgradeCanvas() {
@@ -88,7 +95,8 @@ class GameController {
             explosionsBtn: () => this.setMode("EXPLOSIONS"),
             slidersBtn: () => this.setMode("SLIDERS"),
             endGameBtn: () => this.endGameWithName(),
-            discardGameBtn: () => this.discardGame()
+            discardGameBtn: () => this.discardGame(),
+            settingsSidebarBtn: () => this.toggleSettingsModal()
         };
 
         for (const [id, handler] of Object.entries(buttons)) {
@@ -106,9 +114,14 @@ class GameController {
         this.highlightButton("simpleBtn");
     }
 
+    toggleSettingsModal() {
+        const settingsModal = document.getElementById("settingsModal");
+        settingsModal.style.display = settingsModal.style.display === "flex" ? "none" : "flex";
+    }
+
     highlightButton(buttonId) {
         const modeButtons = ["simpleBtn", "timedBtn", "explosionsBtn", "slidersBtn"];
-        const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn"];
+        const actionButtons = ["newGameBtn", "endGameBtn", "discardGameBtn", "settingsSidebarBtn"];
         const targetBtn = document.getElementById(buttonId);
     
         if (!targetBtn) {
@@ -133,6 +146,7 @@ class GameController {
 
     setupSettings() {
         const settingsBtn = document.getElementById("settingsBtn");
+        const settingsSidebarBtn = document.getElementById("settingsSidebarBtn");
         const settingsModal = document.getElementById("settingsModal");
         const closeBtn = document.getElementById("settingsCloseBtn");
         const blockDesignSelect = document.getElementById("blockDesignSelect");
@@ -216,7 +230,11 @@ class GameController {
     toggleMusic(enabled) {
         this.isMusicPlaying = enabled;
         if (enabled) {
-            this.playMusic();
+            if (this.backgroundMusic.played.length) {
+                this.backgroundMusic.play().catch(error => {
+                    console.error("Error playing background music:", error);
+                });
+            }
         } else {
             this.backgroundMusic.pause();
             this.backgroundMusic.currentTime = 0;
@@ -348,6 +366,7 @@ class GameController {
             this.currentMode.isAnimating = false;
             this.currentMode.timeLeft = 300;
             this.currentMode.bonusMultiplier = 1;
+            this.highestMultiplier = 1;
             this.currentMode.lastMatchTime = null;
             this.waterLevel = 0;
             this.targetWaterLevel = 0;
@@ -437,7 +456,11 @@ class GameController {
 
     async fetchLeaderboard() {
         try {
-            const response = await fetch('/proxy/fetch-scores');
+            const response = await fetch('/client/fetch-scores', {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error(`Failed to fetch leaderboard: ${response.status}`);
             const scores = await response.json();
             this.updateLeaderboardDisplay(scores);
@@ -448,12 +471,12 @@ class GameController {
         }
     }
 
-    async submitScore(name, score, mode) {
+    async submitScore(name, score, mode, multiplier) {
         try {
-            const response = await fetch('/proxy/submit-score', {
+            const response = await fetch('/client/submit-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, score, mode })
+                body: JSON.stringify({ name, score, mode, multiplier })
             });
             if (!response.ok) throw new Error(`Failed to submit score: ${response.status}`);
             await this.fetchLeaderboard();
@@ -493,13 +516,14 @@ class GameController {
                 (scores[mode] || []).forEach((entry, index) => {
                     const div = document.createElement("div");
                     div.className = "leaderboard-entry";
-                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score}</span>`;
+                    const displayMultiplier = entry.multiplier !== undefined ? entry.multiplier : 1;
+                    div.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>x${displayMultiplier}</span><span>${entry.score}</span>`;
                     list.appendChild(div);
                 });
                 if ((scores[mode] || []).length === 0) {
                     const div = document.createElement("div");
                     div.className = "leaderboard-entry";
-                    div.innerHTML = "<span>No scores yet</span>";
+                    div.innerHTML = "<span>No scores yet</span><span>-</span><span>-</span>";
                     list.appendChild(div);
                 }
             }
@@ -588,7 +612,7 @@ class GameController {
         const anonymousBtn = document.getElementById("anonymousBtn");
         const discardBtn = document.getElementById("discardBtn");
 
-        scoreDisplay.textContent = `Your score: ${Math.round(this.currentMode.score)}`;
+        scoreDisplay.textContent = `Your score: ${Math.round(this.currentMode.score)} (Max Multiplier: x${Math.round(this.highestMultiplier)})`;
         nameInput.value = "";
         errorDisplay.textContent = "";
         modal.style.display = "flex";
@@ -604,7 +628,7 @@ class GameController {
 
             if (playerName === "") {
                 console.log("Name was empty, submitting as Anonymous");
-                this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
+                this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode, Math.round(this.highestMultiplier));
                 modal.style.display = "none";
                 this.startNewGame(this.currentMode.gameMode);
                 this.startLeaderboardPolling();
@@ -612,7 +636,7 @@ class GameController {
                 const validation = this.validateName(playerName);
                 if (validation.valid) {
                     console.log("Name is valid:", playerName);
-                    this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode);
+                    this.submitScore(playerName, Math.round(this.currentMode.score), this.currentMode.gameMode, Math.round(this.highestMultiplier));
                     modal.style.display = "none";
                     this.startNewGame(this.currentMode.gameMode);
                     this.startLeaderboardPolling();
@@ -626,7 +650,7 @@ class GameController {
         submitBtn.onclick = submitScoreHandler;
         anonymousBtn.onclick = () => {
             console.log("Submitting as Anonymous");
-            this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode);
+            this.submitScore("Anonymous", Math.round(this.currentMode.score), this.currentMode.gameMode, Math.round(this.highestMultiplier));
             modal.style.display = "none";
             this.startNewGame(this.currentMode.gameMode);
             this.startLeaderboardPolling();
@@ -652,6 +676,7 @@ class GameController {
         this.stopWaterAnimation();
         this.currentMode.reset();
         this.currentMode.score = 0;
+        this.highestMultiplier = 1;
         this.currentMode.updateScoreDisplay();
         this.startNewGame(this.currentMode.gameMode);
         this.startLeaderboardPolling();
