@@ -1,6 +1,5 @@
 class GemGameCore {
     constructor() {
-        console.log("Starting GemGameCore constructor...");
         this.canvas = document.getElementById("gameCanvas");
         if (!this.canvas) {
             console.error("Canvas element not found! Check your HTML for id='gameCanvas'.");
@@ -11,6 +10,17 @@ class GemGameCore {
             console.error("Failed to get 2D context from canvas!");
             return;
         }
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        let canvasWidth;
+        if (isIOS) {
+            canvasWidth = screen.width;
+        } else {
+            canvasWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        }
+        this.canvas.width = canvasWidth > 600 ? 600 : canvasWidth;
+        this.canvas.height = this.canvas.width;
 
         this.gridSize = 8;
         this.tileSize = this.canvas.width / this.gridSize;
