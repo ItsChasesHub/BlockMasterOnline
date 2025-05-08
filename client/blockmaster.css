@@ -885,3 +885,259 @@ input[type="range"]::-moz-range-thumb {
         padding: 6px;
     }
 }
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    body {
+        align-items: center;
+        padding: 0;
+        background-image: linear-gradient( rgb(107, 107, 107) , rgb(48, 48, 48));
+        background-size: 100% 100%;
+        height: 100%;
+    }
+
+    .game-wrapper {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .game-container {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        margin: 1%;
+    }
+
+    .game-legend {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        margin: 10px 0;
+        padding: 15px;
+        background-color: #2a2a2a;
+        border: 5px solid #37d4a7;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .game-content {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-radius: 0;
+        padding: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .sidebar .title {
+        width: 100%;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .sidebar #score,
+    .sidebar #timer,
+    .sidebar #bonusMultiplier {
+        width: auto;
+        flex: 1 1 25%;
+        margin: 5px;
+        font-size: 16px;
+        padding: 5px;
+    }
+
+    .sidebar .button {
+        width: auto;
+        flex: 1 1 25%;
+        margin: 5px;
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .sidebar .upgrade-circle {
+        width: 80px;
+        height: 80px;
+        font-size: 12px;
+        margin: 10px;
+    }
+
+    canvas {
+        width: 100% !important;
+        max-width: 600px;
+        height: auto !important;
+        aspect-ratio: 1 / 1;
+        border-radius: 5px;
+    }
+
+    .bomb-container {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    .leaderboard {
+        width: 100%;
+        border-radius: 0;
+        padding: 10px;
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .leaderboard-title {
+        font-size: 20px;
+    }
+
+    .leaderboard-section h3 {
+        font-size: 16px;
+    }
+
+    .leaderboard-entry {
+        font-size: 14px;
+        padding: 5px;
+    }
+
+    .game-legend .legend-title {
+        font-size: 18px;
+    }
+
+    .game-legend .legend-section h3 {
+        font-size: 14px;
+    }
+
+    .game-legend .legend-entry {
+        font-size: 12px;
+    }
+
+    .info-section {
+        width: 100%;
+        max-width: 100%;
+        margin: 10px 0;
+    }
+
+    .info-item {
+        font-size: 14px;
+    }
+
+    .info-item a,
+    .bitcoin-address,
+    .ethereum-address {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .address-container {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .copy-instruction {
+        font-size: 12px;
+    }
+
+    .modal-content {
+        width: 70%;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .modal-content h2 {
+        font-size: 22px;
+    }
+
+    .modal-content p {
+        font-size: 16px;
+    }
+
+    #playerNameInput {
+        width: 90%;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .error-message {
+        font-size: 12px;
+    }
+
+    .modal-buttons {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .modal-buttons .button {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .modal-info {
+        font-size: 10px;
+    }
+
+    .alert-title {
+        font-size: 22px;
+    }
+
+    #customAlertMessage {
+        font-size: 16px;
+    }
+
+    .settings-title {
+        font-size: 22px;
+    }
+
+    .settings-section {
+        align-items: center;
+    }
+
+    .settings-section h3 {
+        font-size: 16px;
+    }
+
+    .settings-section select {
+        font-size: 14px;
+        padding: 8px;
+        max-width: 200px;
+    }
+
+    .switch {
+        width: 60px;
+        height: 34px;
+    }
+
+    .slider:before {
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+    }
+
+    .volume-control {
+        max-width: 200px;
+    }
+
+    .volume-control label {
+        font-size: 14px;
+    }
+
+    input[type="range"] {
+        max-width: 150px;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .settings-section .button {
+        max-width: 200px;
+        font-size: 14px;
+        padding: 8px;
+    }
+}
